@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>シフト変更</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+
+<body>
+
+<h2>シフト変更</h2>
+
+<input type="date" id="date">
+
+<button onclick="send()">送信</button>
+
+<script>
+
+const LIFF_ID = "ここにLIFF ID";
+
+async function main() {
+  await liff.init({ liffId: LIFF_ID });
+}
+
+main();
+
+async function send() {
+
+  const date = document.getElementById("date").value;
+
+  const profile = await liff.getProfile();
+
+  await fetch("ANYCROSS_WEBHOOK_URL", {
+    method: "POST",
+    headers: {
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      userId: profile.userId,
+      date: date
+    })
+  });
+
+  alert("送信しました");
+
+}
+
+</script>
+
+</body>
+</html>
