@@ -27,7 +27,7 @@ main();
 async function send() {
     const date = document.getElementById("date").value;
     const profile = await liff.getProfile();
-    await fetch("https://httpbin.org/post", {
+    await fetch("https://open-jp.larksuite.com/anycross/trigger/callback/YjBhMmRhN2ZjNTFmMDY4MzAzMzY5NDMzMDlhZjlhNzQw", {
         method: "POST",
         headers: {
             "Content-Type":"application/json"
