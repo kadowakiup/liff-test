@@ -182,7 +182,7 @@ window.onload = async function () {
   const profile = await liff.getProfile();
 
   // ★ここを修正（headers消す）
-  await fetch("https://script.google.com/macros/s/AKfycby7Ecval7Nv-We0ibr-P84nEG1Bv8Nn9r3uwVnDDC2p_HytjCebtQk0YVSbgWGwVP-MrQ/exec", {
+  await fetch("https://script.google.com/macros/s/AKfycbzAGBQWSpYAnYB-EMpsYkAnrfQ12IYOLr7EsLH7ktcPlnLVRjWdjyKwwkYDX8DL9qRDzw/exec", {
     method: "POST",
     body: JSON.stringify({
       userId: profile.userId,
