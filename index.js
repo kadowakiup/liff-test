@@ -57,7 +57,7 @@ window.onload = async function () {
 //       userId: userId
 //     })
 //   })
-fetch("GASのURL", {
+fetch("https://script.google.com/macros/s/AKfycbz0Sv4xWnHyRsioN752Zz2ISigXwmVlMXpxRnWXmI8RZvre3szuLLqUBPK5s3Fypgt9ig/exec", {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
