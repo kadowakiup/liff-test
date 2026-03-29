@@ -20,7 +20,7 @@
 
 const LIFF_ID = "2009569390-ToBfmkCN";
 async function main() {
-    await liff.init({ liffId: 2009569390-ToBfmkCN });
+    await liff.init({ liffId: LIFF_ID });
 }
 main();
 async function send() {
