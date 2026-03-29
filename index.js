@@ -19,6 +19,7 @@
 // // });
 
 const LIFF_ID = "2009569390-ToBfmkCN";
+console.log(LIFF_ID);
 async function main() {
     await liff.init({ liffId: LIFF_ID });
 }
