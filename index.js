@@ -141,34 +141,24 @@
 
 
 
-async function main() {
+window.onload = async function () {
       await liff.init({ liffId: "2009569390-ToBfmkCN" });
 
-      // ログインしてなければログイン
       if (!liff.isLoggedIn()) {
         liff.login();
         return;
       }
 
-      // ユーザー情報取得
       const profile = await liff.getProfile();
       const userId = profile.userId;
 
       console.log("UserID:", userId);
 
-      // Anycrossへ送信
-      const res = await fetch("https://open-jp.larksuite.com/anycross/trigger/callback/NWE5ZDg4YTJmOTg2MGIyODJkYzAyZGZkMDgzMDA2OWYw", {
+      await fetch("https://open-jp.larksuite.com/anycross/trigger/callback/NWE5ZDg4YTJmOTg2MGIyODJkYzAyZGZkMDgzMDA2OWYw", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          userId: userId
-        })
+        body: JSON.stringify({ userId })
       });
-
-      const text = await res.text();
-      console.log("Anycross response:", text);
-    }
-
-    main();
+    };
