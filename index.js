@@ -142,26 +142,41 @@
 
 
     
-window.onload = async function () {
-  await liff.init({ liffId: "2009569390-ToBfmkCN" });
+// window.onload = async function () {
+//   await liff.init({ liffId: "2009569390-ToBfmkCN" });
 
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
-  }
+//   if (!liff.isLoggedIn()) {
+//     liff.login();
+//     return;
+//   }
 
-  const profile = await liff.getProfile();
+//   const profile = await liff.getProfile();
 
-  await fetch("https://open-jp.larksuite.com/anycross/trigger/callback/NWE5ZDg4YTJmOTg2MGIyODJkYzAyZGZkMDgzMDA2OWYw", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      userId: profile.userId,
-      name: profile.displayName
-    })
-  });
+//   await fetch("https://open-jp.larksuite.com/anycross/trigger/callback/NWE5ZDg4YTJmOTg2MGIyODJkYzAyZGZkMDgzMDA2OWYw", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify({
+//       userId: profile.userId,
+//       name: profile.displayName
+//     })
+//   });
 
-  console.log("送信完了");
-};
+//   console.log("送信完了");
+// };
+
+
+
+
+
+
+fetch("https://script.google.com/macros/s/AKfycby7Ecval7Nv-We0ibr-P84nEG1Bv8Nn9r3uwVnDDC2p_HytjCebtQk0YVSbgWGwVP-MrQ/exec", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ test: "ok" })
+})
+.then(res => res.json())
+.then(console.log)
