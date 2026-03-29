@@ -20,6 +20,19 @@
 //     alert("送信しました");
 // }
 
+const LIFF_ID = "2009569390-ToBfmkCN";
+
+async function main() {
+    await liff.init({ liffId: LIFF_ID });
+
+    if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+    }
+}
+
+main();
+
 async function send() {
 
     const date = document.getElementById("date").value;
@@ -27,7 +40,7 @@ async function send() {
     await liff.sendMessages([
         {
             type: "text",
-            text: "シフト変更＞テスト成功天才" + date
+            text: "シフト変更＞" + date
         }
     ]);
 
