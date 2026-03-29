@@ -21,7 +21,7 @@
       async function send() {
         const date = document.getElementById("date").value;
         const profile = await liff.getProfile();
-        await fetch("ANYCROSS_WEBHOOK_URL", {
+        await fetch("https://httpbin.org/post", {
           method: "POST",
           headers: {
             "Content-Type":"application/json"
