@@ -48,15 +48,26 @@ window.onload = async function () {
 
   console.log("fetch前");
   // 👉 AnyCrossにリクエスト送る
-  fetch("https://open-jp.larksuite.com/anycross/trigger/callback/NWE5ZDg4YTJmOTg2MGIyODJkYzAyZGZkMDgzMDA2OWYw", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      userId: userId
-    })
+//   fetch("https://open-jp.larksuite.com/anycross/trigger/callback/NWE5ZDg4YTJmOTg2MGIyODJkYzAyZGZkMDgzMDA2OWYw", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify({
+//       userId: userId
+//     })
+//   })
+fetch("GASのURL", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    userId: userId
   })
+})
+
+
   .then(res => res.json())
   .then(data => {
       document.getElementById("result").innerText = data.total;
