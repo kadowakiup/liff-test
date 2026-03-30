@@ -157,38 +157,46 @@
 
 
 window.onload = async function () {
-  await liff.init({ liffId: "2009569390-ToBfmkCN" });
+  try {
+    await liff.init({ liffId: "2009569390-ToBfmkCN" });
 
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
-  }
-
-  const button = document.getElementById("updateButton");
-  const resultDiv = document.getElementById("result");
-
-  button.addEventListener("click", async () => {
-    try {
-      const profile = await liff.getProfile();
-
-      const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbzGPx2dqhDxn4bGv_AgVJv1K1om_SKKzvLpDBwNxIzLTzNci81wVaxSx8MU6Pg9qS7pfA/exec",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            userId: profile.userId,
-            name: profile.displayName
-          })
-        }
-      );
-
-      const data = await response.json();
-
-      resultDiv.textContent = "合計稼働時間: " + (data.total ?? 0);
-
-    } catch (err) {
-      console.error(err);
-      resultDiv.textContent = "エラーが発生しました";
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
     }
-  });
+
+    const button = document.getElementById("updateButton");
+    const resultDiv = document.getElementById("result");
+
+    button.addEventListener("click", async () => {
+      try {
+        const profile = await liff.getProfile();
+
+        const payload = {
+          userId: profile.userId,
+          name: profile.displayName
+        };
+
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzGPx2dqhDxn4bGv_AgVJv1K1om_SKKzvLpDBwNxIzLTzNci81wVaxSx8MU6Pg9qS7pfA/exec", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        resultDiv.textContent = "合計稼働時間: " + (data.total || 0);
+
+      } catch (err) {
+        console.error(err);
+        resultDiv.textContent = "エラー: " + err.message;
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("result").textContent = "LIFF初期化エラー";
+  }
 };
