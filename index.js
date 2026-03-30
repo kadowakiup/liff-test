@@ -68,7 +68,7 @@ window.onload = async function () {
         };
 
         // 👇 AnycrossにPOST
-        const response = await fetch("https://script.google.com/macros/s/AKfycbzAGBQWSpYAnYB-EMpsYkAnrfQ12IYOLr7EsLH7ktcPlnLVRjWdjyKwwkYDX8DL9qRDzw/exec", {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzGPx2dqhDxn4bGv_AgVJv1K1om_SKKzvLpDBwNxIzLTzNci81wVaxSx8MU6Pg9qS7pfA/exec", {
           method: "POST",
           body: JSON.stringify(payload)
         });
