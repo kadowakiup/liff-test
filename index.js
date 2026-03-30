@@ -177,13 +177,14 @@ window.onload = async function () {
           name: profile.displayName
         };
 
-        const response = await fetch("https://script.google.com/macros/s/AKfycbzGPx2dqhDxn4bGv_AgVJv1K1om_SKKzvLpDBwNxIzLTzNci81wVaxSx8MU6Pg9qS7pfA/exec", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
+        // 🔥 ここが重要（headersなし）
+        const response = await fetch(
+          "https://script.google.com/macros/s/AKfycbzGPx2dqhDxn4bGv_AgVJv1K1om_SKKzvLpDBwNxIzLTzNci81wVaxSx8MU6Pg9qS7pfA/exec",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          }
+        );
 
         const data = await response.json();
 
