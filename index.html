@@ -2,19 +2,26 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>シフト更新</title>
-    <!-- LIFF SDK -->
+    <title>シフト管理</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <!-- メインJS -->
     <script src="index.js"></script>
+    <style src="style.css"></style>
   </head>
   <body>
-    <div class="first-message">
-      <h2>更新ボタンを押してください</h2>
-      <button id="updateButton">更新</button>
+    <h2>シフト管理</h2>
+    
+    <!-- 更新ボタン -->
+    <button id="updateButton">更新</button>
+    <div id="result">ここに結果が出ます</div>
+    
+    <!-- 前月/今月ナビ -->
+    <div id="monthNav">
+      <button id="prevMonth">&lt; 前月</button>
+      <span id="currentMonth">3月</span>
+      <button id="nextMonth">次月 &gt;</button>
     </div>
     
-    <div id="result">ここに結果が出ます</div>
-  </body>
+    <!-- カレンダー表示 -->
+    <div id="calendar"></div>
   </body>
 </html>
