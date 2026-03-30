@@ -156,49 +156,30 @@
 
 
 
-window.onload = async function () {
-  await liff.init({ liffId: "2009569390-ToBfmkCN" });
+button.addEventListener("click", async () => {
+  try {
+    const profile = await liff.getProfile();
 
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
+    const payload = {
+      userId: profile.userId,
+      name: profile.displayName
+    };
+
+    const response = await fetch(
+      "https://script.google.com/macros/s/AKfycbzGPx2dqhDxn4bGv_AgVJv1K1om_SKKzvLpDBwNxIzLTzNci81wVaxSx8MU6Pg9qS7pfA/exec",
+      {
+        method: "POST",
+        body: JSON.stringify(payload)
+      }
+    );
+
+    const data = await response.json();
+
+    // 👇 ここが最終形
+    resultDiv.textContent = "合計稼働時間: " + data.total;
+
+  } catch (err) {
+    console.error(err);
+    resultDiv.textContent = "エラー: " + err.message;
   }
-
-  const button = document.getElementById("updateButton");
-  const resultDiv = document.getElementById("result");
-
-  button.addEventListener("click", async () => {
-    try {
-      const profile = await liff.getProfile();
-
-      const payload = {
-        userId: profile.userId,
-        name: profile.displayName
-      };
-
-      console.log("送信payload:", payload);
-
-      const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbzGPx2dqhDxn4bGv_AgVJv1K1om_SKKzvLpDBwNxIzLTzNci81wVaxSx8MU6Pg9qS7pfA/exec",
-        {
-          method: "POST",
-          body: JSON.stringify(payload)
-        }
-      );
-
-      console.log("HTTPステータス:", response.status);
-
-      const text = await response.text();
-      console.log("🔥 GAS生レスポンス:", text);
-
-      const json = JSON.parse(text);
-      console.log("🔥 JSON変換:", json);
-
-      resultDiv.textContent = text;
-
-    } catch (err) {
-      console.error(err);
-      resultDiv.textContent = "エラー: " + err.message;
-    }
-  });
-};
+});
