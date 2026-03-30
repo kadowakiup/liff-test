@@ -1,31 +1,35 @@
- /* 簡易カレンダーCSS */
-      #calendar {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 5px;
-        margin-top: 20px;
-      }
-      .day {
-        border: 1px solid #ccc;
-        padding: 5px;
-        min-height: 60px;
-        position: relative;
-      }
-      .date {
-        font-weight: bold;
-      }
-      .shift-time {
-        margin-top: 5px;
-        font-size: 0.9em;
-      }
-      .add-btn, .edit-btn, .delete-btn {
-        display: block;
-        margin-top: 3px;
-        font-size: 0.8em;
-        cursor: pointer;
-      }
-      #monthNav {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
-      }
+/* style.scss */
+
+/* カレンダー全体 */
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-top: 20px;
+}
+
+/* 日付セル */
+.day {
+  border: 1px solid #ccc;
+  padding: 5px;
+  min-height: 60px;
+  position: relative;
+}
+
+/* 日付表示 */
+.date {
+  font-weight: bold;
+}
+
+/* シフト時間表示 */
+.shift-time {
+  margin-top: 5px;
+  font-size: 0.9em;
+}
+
+/* 月ナビゲーション */
+#monthNav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}

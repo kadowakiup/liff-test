@@ -3,21 +3,24 @@
   <head>
     <meta charset="utf-8">
     <title>シフト管理</title>
+    <link rel="stylesheet" href="style.css"> <!-- compiled style.scss -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="index.js"></script>
-    <style src="style.css"></style>
   </head>
   <body>
     <h2>シフト管理</h2>
     
     <!-- 更新ボタン -->
-    <button id="updateButton">更新</button>
+    <div id="firstMessage">
+      <button id="updateButton">更新</button>
+    </div>
+    
     <div id="result">ここに結果が出ます</div>
     
     <!-- 前月/今月ナビ -->
-    <div id="monthNav">
+    <div id="monthNav" style="display:none;">
       <button id="prevMonth">&lt; 前月</button>
-      <span id="currentMonth">3月</span>
+      <span id="currentMonth"></span>
       <button id="nextMonth">次月 &gt;</button>
     </div>
     

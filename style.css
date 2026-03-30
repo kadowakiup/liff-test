@@ -1,5 +1,6 @@
 @charset "UTF-8";
-/* 簡易カレンダーCSS */
+/* style.scss */
+/* カレンダー全体 */
 #calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -7,6 +8,7 @@
   margin-top: 20px;
 }
 
+/* 日付セル */
 .day {
   border: 1px solid #ccc;
   padding: 5px;
@@ -14,22 +16,18 @@
   position: relative;
 }
 
+/* 日付表示 */
 .date {
   font-weight: bold;
 }
 
+/* シフト時間表示 */
 .shift-time {
   margin-top: 5px;
   font-size: 0.9em;
 }
 
-.add-btn, .edit-btn, .delete-btn {
-  display: block;
-  margin-top: 3px;
-  font-size: 0.8em;
-  cursor: pointer;
-}
-
+/* 月ナビゲーション */
 #monthNav {
   display: flex;
   justify-content: space-between;

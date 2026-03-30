@@ -59,45 +59,55 @@ window.onload = async function () {
   const calendarDiv = document.getElementById("calendar");
   const currentMonthSpan = document.getElementById("currentMonth");
   const updateButton = document.getElementById("updateButton");
-  
-  let currentDate = new Date(); // 今月を基準に
-  let shiftData = {}; // 日付ごとのシフト時間を格納するオブジェクト
+  const resultDiv = document.getElementById("result");
+  const firstMessageDiv = document.getElementById("firstMessage");
+  const monthNavDiv = document.getElementById("monthNav");
+  const prevMonthBtn = document.getElementById("prevMonth");
+  const nextMonthBtn = document.getElementById("nextMonth");
 
-  // 💡 ここでは仮データを使います
-  shiftData = {
+  // 現在日付
+  let currentDate = new Date();
+
+  // 仮データ（実際はGASから取得）
+  let shiftData = {
     "2026-03-01": "9:00-17:00",
     "2026-03-02": "10:00-18:00",
     "2026-03-04": "9:30-17:30",
     "2026-03-07": "11:00-19:00",
-    // ...必要に応じて追加
   };
 
-  // カレンダー生成関数
+  // カレンダー生成
   function generateCalendar(date) {
-    calendarDiv.innerHTML = ""; // まず空にする
+    calendarDiv.innerHTML = "";
+
     const year = date.getFullYear();
     const month = date.getMonth(); // 0~11
     currentMonthSpan.textContent = `${year}年 ${month + 1}月`;
 
-    // 月初・月末
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const totalDays = lastDay.getDate();
 
-    for (let day = 1; day <= totalDays; day++) {
-      const fullDate = new Date(year, month, day);
-      const fullDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const startDay = firstDay.getDay(); // 0=日曜
 
+    // 空セル
+    for (let i = 0; i < startDay; i++) {
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "day";
+      calendarDiv.appendChild(emptyDiv);
+    }
+
+    // 日付セル
+    for (let day = 1; day <= totalDays; day++) {
+      const fullDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       const dayDiv = document.createElement("div");
       dayDiv.className = "day";
 
-      // 日付表示
       const dateSpan = document.createElement("span");
       dateSpan.className = "date";
       dateSpan.textContent = day;
       dayDiv.appendChild(dateSpan);
 
-      // シフト時間表示（ある場合のみ）
       if (shiftData[fullDateStr]) {
         const shiftSpan = document.createElement("div");
         shiftSpan.className = "shift-time";
@@ -109,13 +119,37 @@ window.onload = async function () {
     }
   }
 
-  // 初期表示
-  generateCalendar(currentDate);
+  // 更新ボタン押下
+  updateButton.addEventListener("click", async () => {
+    // 更新中表示
+    resultDiv.textContent = "更新中…";
 
-  // 更新ボタン（今回はデータ更新用のダミー）
-  updateButton.addEventListener("click", () => {
-    alert("更新処理を呼び出すところです。GASからのデータ取得後に反映可能");
-    // ここで fetch → GAS → Anycross → JSON を取得して shiftData を更新
-    // その後 generateCalendar(currentDate) を呼ぶ
+    try {
+      // 💡 実際はここで fetch → GAS → Anycross → JSON を取得
+      // await fetchGAS();
+
+      // データ取得完了
+      firstMessageDiv.style.display = "none"; // 更新ボタン非表示
+      monthNavDiv.style.display = "flex";     // 月ナビ表示
+      resultDiv.textContent = "";             // 更新中消す
+
+      generateCalendar(currentDate);          // カレンダー生成
+
+    } catch (err) {
+      console.error(err);
+      resultDiv.textContent = "取得エラー: " + err.message;
+    }
+  });
+
+  // 前月ボタン
+  prevMonthBtn.addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    generateCalendar(currentDate);
+  });
+
+  // 翌月ボタン
+  nextMonthBtn.addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    generateCalendar(currentDate);
   });
 };
