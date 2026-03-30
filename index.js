@@ -248,7 +248,7 @@ window.onload = async function () {
 
       // GASにPOSTしてAnycrossデータ取得
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbzGPx2dqhDxn4bGv_AgVJv1K1om_SKKzvLpDBwNxIzLTzNci81wVaxSx8MU6Pg9qS7pfA/exec",
+        "https://script.google.com/macros/s/AKfycbwNi1gTg9is9-NpP51wAhH2qocLhCmdxDxc1fJSpodsWapo2-25oldV3RetjbxWMIey0A/exec",
         {
           method: "POST",
           contentType: "application/json",
