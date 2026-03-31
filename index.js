@@ -268,7 +268,7 @@ window.onload = async function () {
       if (!response.ok) throw new Error("GASへのリクエスト失敗: " + response.status);
 
       const data = await response.json();
-      console.log("GAS response:", data);
+     console.log("shiftData:", JSON.stringify(shiftData, null, 2));
 
       // 取得データを shiftData に変換
       // ここでは仮に「data.shifts」に { "2026-03-01": "9:00-17:00", ... } が入ってくる想定
