@@ -260,7 +260,9 @@ window.onload = async function () {
         "https://script.google.com/macros/s/AKfycbwNi1gTg9is9-NpP51wAhH2qocLhCmdxDxc1fJSpodsWapo2-25oldV3RetjbxWMIey0A/exec",
         {
           method: "POST",
-          contentType: "application/json",
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify(payload)
         }
       );
@@ -268,7 +270,6 @@ window.onload = async function () {
       if (!response.ok) throw new Error("GASへのリクエスト失敗: " + response.status);
 
       const data = await response.json();
-      console.log("GAS response FULL:", JSON.stringify(data, null, 2));
       // 取得データを shiftData に変換
       // ここでは仮に「data.shifts」に { "2026-03-01": "9:00-17:00", ... } が入ってくる想定
       shiftData = data.shifts || {};
@@ -309,6 +310,4 @@ window.onload = async function () {
     updateMonthButtons();
   });
 
-  console.log("shiftData:", shiftData);
-  console.log("fullDateStr:", fullDateStr);
 };
