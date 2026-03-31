@@ -308,4 +308,7 @@ window.onload = async function () {
     generateCalendar(currentDate);
     updateMonthButtons();
   });
+
+  console.log("shiftData:", shiftData);
+  console.log("fullDateStr:", fullDateStr);
 };
