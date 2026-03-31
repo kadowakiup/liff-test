@@ -361,6 +361,10 @@ window.onload = async function () {
   // 保存処理
   // =====================
   saveEdit.addEventListener("click", () => {
+    // ✅ 保存前に確認ポップアップ
+    const proceed = confirm("このシフト変更を保存してもよろしいですか？");
+    if (!proceed) return;
+
     let start = startSelect.value;
     let end = endSelect.value;
 
@@ -415,6 +419,7 @@ window.onload = async function () {
     }
 
     console.log("変更OK:", start, end);
+    alert(`シフトを保存しました: ${start} - ${end}`);
   });
 
   // =====================
