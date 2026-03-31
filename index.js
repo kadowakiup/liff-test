@@ -238,7 +238,7 @@ window.onload = async function () {
         end: newEnd
       };
 
-      const res = await fetch("GAS_URL", {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwNi1gTg9is9-NpP51wAhH2qocLhCmdxDxc1fJSpodsWapo2-25oldV3RetjbxWMIey0A/exec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -269,7 +269,7 @@ window.onload = async function () {
   updateButton.addEventListener("click", async () => {
     try {
       const profile = await liff.getProfile();
-      const res = await fetch("GAS_URL?userId=" + profile.userId);
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwNi1gTg9is9-NpP51wAhH2qocLhCmdxDxc1fJSpodsWapo2-25oldV3RetjbxWMIey0A/exec?userId=" + profile.userId);
       const data = await res.json();
 
       shiftData = data.shifts || {};
