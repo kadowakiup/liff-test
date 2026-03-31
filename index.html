@@ -3,30 +3,47 @@
   <head>
     <meta charset="utf-8">
     <title>シフト管理</title>
-    <link rel="stylesheet" href="style.css"> <!-- compiled style.scss -->
+    <link rel="stylesheet" href="style.css">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="index.js"></script>
-    <!-- cssフォルダに置いた場合 -->
-    <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <h2>シフト管理</h2>
-    
-    <!-- 更新ボタン -->
-    <div id="firstMessage">
-      <button id="updateButton">更新</button>
+
+    <!-- ===== カレンダー画面 ===== -->
+    <div id="calendarView">
+      
+      <!-- 更新ボタン -->
+      <div id="firstMessage">
+        <button id="updateButton">更新</button>
+      </div>
+      
+      <div id="result">ここに結果が出ます</div>
+      
+      <!-- 前月/今月ナビ -->
+      <div id="monthNav" style="display:none;">
+        <button id="prevMonth">&lt; 前月</button>
+        <span id="currentMonth"></span>
+        <button id="nextMonth">次月 &gt;</button>
+      </div>
+      
+      <!-- カレンダー表示 -->
+      <div id="calendar"></div>
+
     </div>
-    
-    <div id="result">ここに結果が出ます</div>
-    
-    <!-- 前月/今月ナビ -->
-    <div id="monthNav" style="display:none;">
-      <button id="prevMonth">&lt; 前月</button>
-      <span id="currentMonth"></span>
-      <button id="nextMonth">次月 &gt;</button>
+
+    <!-- ===== 詳細画面（追加） ===== -->
+    <div id="detailView" style="display:none;">
+      <h3 id="detailDate"></h3>
+      <p id="detailShift"></p>
+
+      <button id="btnEdit">時間変更</button>
+      <button id="btnDelete">休み / 削除</button>
+      <button id="btnMedical">診断書提出</button>
+
+      <br><br>
+      <button id="backButton">戻る</button>
     </div>
-    
-    <!-- カレンダー表示 -->
-    <div id="calendar"></div>
+
   </body>
 </html>

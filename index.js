@@ -192,6 +192,11 @@ window.onload = async function () {
     return;
   }
 
+  document.getElementById("backButton").addEventListener("click", () => {
+    document.getElementById("detailView").style.display = "none";
+    document.getElementById("calendarView").style.display = "block";
+  });
+
   const today = new Date();
   let currentDate = new Date(today);
   let shiftData = {};
@@ -234,15 +239,14 @@ window.onload = async function () {
         shiftSpan.className = "shift-time";
         shiftSpan.textContent = shiftData[fullDateStr];
 
-        // 👇 ここ追加（重要）
+        // 👇 クリックで詳細表示
         shiftSpan.addEventListener("click", (e) => {
-          e.stopPropagation(); // ← 日付クリック防止
+          e.stopPropagation();
           openDetail(fullDateStr, shiftData[fullDateStr]);
         });
 
         dayDiv.appendChild(shiftSpan);
       }
-
       calendarDiv.appendChild(dayDiv);
     }
   }
@@ -333,3 +337,11 @@ window.onload = async function () {
     }
   });
 };
+
+function openDetail(date, shift) {
+  document.getElementById("calendarView").style.display = "none";
+  document.getElementById("detailView").style.display = "block";
+
+  document.getElementById("detailDate").textContent = date;
+  document.getElementById("detailShift").textContent = shift || "シフトなし";
+}
