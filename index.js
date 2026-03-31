@@ -211,15 +211,23 @@ window.onload = async function () {
 
     editError.textContent = "";
 
-    // ルールチェック
-    if (startDt < now || endDt < now) {
-      editError.textContent = "シフト変更時間を過ぎています。公式LINEに相談してください";
+    // 変更チェック
+    const startChanged = newStart !== originalStart;
+    const endChanged = newEnd !== originalEnd;
+
+    // 出勤チェック
+    if (startChanged && startDt < now) {
+      editError.textContent = "出勤時間は過去に設定できません。公式LINEに相談してください";
       return;
     }
-    if (originalEndDt < now) {
-      editError.textContent = "このシフトは変更できません。公式LINEに相談してください";
+
+    // 退勤チェック
+    if (endChanged && (endDt < now || originalEndDt < now)) {
+      editError.textContent = "退勤時間は変更できません。公式LINEに相談してください";
       return;
     }
+
+    // 時間不正チェック
     if (startDt >= endDt) {
       editError.textContent = "時間の設定が不正です。公式LINEに相談してください";
       return;
