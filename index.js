@@ -1,169 +1,4 @@
 // GAS経由でshiftData取得＋カレンダー表示
-// window.onload = async function () {
-//   const calendarDiv = document.getElementById("calendar");
-//   const currentMonthSpan = document.getElementById("currentMonth");
-//   const updateButton = document.getElementById("updateButton");
-//   const resultDiv = document.getElementById("result");
-//   const firstMessageDiv = document.getElementById("firstMessage");
-//   const monthNavDiv = document.getElementById("monthNav");
-//   const prevMonthBtn = document.getElementById("prevMonth");
-//   const nextMonthBtn = document.getElementById("nextMonth");
-
-//   // 🔹 LIFF初期化
-//   try {
-//     await liff.init({ liffId: "2009569390-ToBfmkCN" });
-//   } catch (err) {
-//     console.error(err);
-//     resultDiv.textContent = "LIFF初期化エラー: " + err.message;
-//     return;
-//   }
-
-//   const today = new Date();
-//   let currentDate = new Date(today);
-//   let shiftData = {};
-
-//   // カレンダー生成
-//   function generateCalendar(date) {
-//     calendarDiv.innerHTML = "";
-
-//     const year = date.getFullYear();
-//     const month = date.getMonth();
-//     currentMonthSpan.textContent = `${year}年 ${month + 1}月`;
-
-//     const firstDay = new Date(year, month, 1);
-//     const lastDay = new Date(year, month + 1, 0);
-//     const totalDays = lastDay.getDate();
-//     const startDay = firstDay.getDay();
-
-//     // 空セル
-//     for (let i = 0; i < startDay; i++) {
-//       const emptyDiv = document.createElement("div");
-//       emptyDiv.className = "day";
-//       calendarDiv.appendChild(emptyDiv);
-//     }
-
-//     // 日付セル
-//     for (let day = 1; day <= totalDays; day++) {
-//       const fullDateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-//       const dayDiv = document.createElement("div");
-//       dayDiv.className = "day";
-
-//       const dateSpan = document.createElement("span");
-//       dateSpan.className = "date";
-//       dateSpan.textContent = day;
-//       dayDiv.appendChild(dateSpan);
-
-//       // シフト表示
-//       if (shiftData[fullDateStr]) {
-//         const shiftSpan = document.createElement("div");
-//         shiftSpan.className = "shift-time";
-//         shiftSpan.textContent = shiftData[fullDateStr];
-
-//         // 👇 ここ追加（重要）
-//         shiftSpan.addEventListener("click", (e) => {
-//           e.stopPropagation(); // ← 日付クリック防止
-//           openDetail(fullDateStr, shiftData[fullDateStr]);
-//         });
-
-//         dayDiv.appendChild(shiftSpan);
-//       }
-
-//       calendarDiv.appendChild(dayDiv);
-//     }
-//   }
-
-//   // 月制限（前月・当月・翌月）
-//   function updateMonthButtons() {
-//     const minDate = new Date(today.getFullYear(), today.getMonth() - 1);
-//     const maxDate = new Date(today.getFullYear(), today.getMonth() + 1);
-
-//     const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
-//     const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1);
-
-//     prevMonthBtn.disabled = prevMonth < minDate;
-//     nextMonthBtn.disabled = nextMonth > maxDate;
-//   }
-
-//   prevMonthBtn.addEventListener("click", () => {
-//     currentDate.setMonth(currentDate.getMonth() - 1);
-//     generateCalendar(currentDate);
-//     updateMonthButtons();
-//   });
-
-//   nextMonthBtn.addEventListener("click", () => {
-//     currentDate.setMonth(currentDate.getMonth() + 1);
-//     generateCalendar(currentDate);
-//     updateMonthButtons();
-//   });
-
-//   // 🔹 更新ボタン
-//   updateButton.addEventListener("click", async () => {
-//     resultDiv.textContent = "更新中…";
-
-//     try {
-//       if (!liff.isLoggedIn()) {
-//         liff.login();
-//         return;
-//       }
-
-//       const profile = await liff.getProfile();
-
-//       const url =
-//         "https://script.google.com/macros/s/AKfycbwNi1gTg9is9-NpP51wAhH2qocLhCmdxDxc1fJSpodsWapo2-25oldV3RetjbxWMIey0A/exec" +
-//         "?userId=" + encodeURIComponent(profile.userId) +
-//         "&name=" + encodeURIComponent(profile.displayName);
-
-//       const response = await fetch(url);
-
-//       if (!response.ok) {
-//         throw new Error("GASエラー: " + response.status);
-//       }
-
-//       // 🔥 ここからデバッグの本体
-//       const rawText = await response.text();
-//       console.log("RAW TEXT:", rawText);
-
-//       let data;
-//       try {
-//         data = JSON.parse(rawText);
-//       } catch (e) {
-//         console.error("JSONパース失敗", e);
-//         resultDiv.textContent = "JSONパース失敗";
-//         return;
-//       }
-
-//       console.log("PARSED:", data);
-
-//       // 🔥 全パターン対応
-//       shiftData =
-//         data.shifts ||
-//         data.body?.shifts ||
-//         data.data?.body?.shifts ||
-//         {};
-
-//       console.log("shiftData:", shiftData);
-
-//       // UI切替
-//       firstMessageDiv.style.display = "none";
-//       monthNavDiv.style.display = "flex";
-//       resultDiv.textContent = "";
-
-//       generateCalendar(currentDate);
-//       updateMonthButtons();
-
-//     } catch (err) {
-//       console.error(err);
-//       resultDiv.textContent = "取得エラー: " + err.message;
-//       alert("エラーが発生しました: " + err.message);
-//     }
-//   });
-// };
-
-
-
-
-
 window.onload = async function () {
   const calendarDiv = document.getElementById("calendar");
   const currentMonthSpan = document.getElementById("currentMonth");
@@ -182,12 +17,12 @@ window.onload = async function () {
 
   const backButton = document.getElementById("backButton");
   const btnEdit = document.getElementById("btnEdit");
+  const saveEdit = document.getElementById("saveEdit");
+  const editError = document.getElementById("editError");
 
   const editArea = document.getElementById("editArea");
   const startSelect = document.getElementById("startTime");
   const endSelect = document.getElementById("endTime");
-  const saveEdit = document.getElementById("saveEdit");
-  const editError = document.getElementById("editError");
 
   let shiftData = {};
   let currentDate = new Date();
@@ -280,17 +115,6 @@ window.onload = async function () {
     startSelect.innerHTML = "";
     endSelect.innerHTML = "";
 
-    // ★ 追加
-    const noChangeStart = document.createElement("option");
-    noChangeStart.value = "";
-    noChangeStart.textContent = "変更なし";
-    startSelect.appendChild(noChangeStart);
-
-    const noChangeEnd = document.createElement("option");
-    noChangeEnd.value = "";
-    noChangeEnd.textContent = "変更なし";
-    endSelect.appendChild(noChangeEnd);
-
     const startRules = {
       12: ["00","15","30","45"],
       13: ["00","15","30","45"],
@@ -323,7 +147,6 @@ window.onload = async function () {
       for (let m of startRules[h]) {
         const time = `${h.padStart(2,"0")}:${m}`;
         const dt = new Date(`${selectedDate} ${time}`);
-
         if (dt < now) continue;
 
         const opt = document.createElement("option");
@@ -338,7 +161,6 @@ window.onload = async function () {
       for (let m of endRules[h]) {
         const time = `${h.padStart(2,"0")}:${m}`;
         const dt = new Date(`${selectedDate} ${time}`);
-
         if (dt < now) continue;
 
         const opt = document.createElement("option");
@@ -347,6 +169,19 @@ window.onload = async function () {
         endSelect.appendChild(opt);
       }
     }
+
+    // デフォルトは「変更なし」
+    const defaultStart = document.createElement("option");
+    defaultStart.value = originalStart;
+    defaultStart.textContent = "変更なし";
+    defaultStart.selected = true;
+    startSelect.prepend(defaultStart);
+
+    const defaultEnd = document.createElement("option");
+    defaultEnd.value = originalEnd;
+    defaultEnd.textContent = "変更なし";
+    defaultEnd.selected = true;
+    endSelect.prepend(defaultEnd);
   }
 
   // =====================
@@ -358,85 +193,94 @@ window.onload = async function () {
   });
 
   // =====================
-  // 保存処理
+  // 保存処理（確認ポップアップ＋GAS経由更新）
   // =====================
-  saveEdit.addEventListener("click", () => {
-    // ✅ 保存前に確認ポップアップ
-    const proceed = confirm("このシフト変更を保存してもよろしいですか？");
-    if (!proceed) return;
-
-    let start = startSelect.value;
-    let end = endSelect.value;
-
+  saveEdit.addEventListener("click", async () => {
+    const start = startSelect.value;
+    const end = endSelect.value;
     const selectedDate = detailDate.textContent;
 
+    // 「変更なし」の場合は元の値を使用
+    const newStart = start === originalStart ? originalStart : start;
+    const newEnd = end === originalEnd ? originalEnd : end;
+
     const now = new Date();
-
-    // ★ 変更なし対応
-    const isStartChanged = !!start;
-    const isEndChanged = !!end;
-
-    if (!start) start = originalStart;
-    if (!end) end = originalEnd;
-
-    const startDt = new Date(`${selectedDate} ${start}`);
-    const endDt = new Date(`${selectedDate} ${end}`);
+    const startDt = new Date(`${selectedDate} ${newStart}`);
+    const endDt = new Date(`${selectedDate} ${newEnd}`);
     const originalEndDt = new Date(`${selectedDate} ${originalEnd}`);
 
     editError.textContent = "";
 
-    // =========================
-    // ① 出勤チェック（変更した場合のみ）
-    // =========================
-    if (isStartChanged && startDt < now) {
-      editError.textContent = "シフト変更時間を過ぎています（出勤）";
+    // ルールチェック
+    if (startDt < now || endDt < now) {
+      editError.textContent = "シフト変更時間を過ぎています。公式LINEに相談してください";
       return;
     }
-
-    // =========================
-    // ② 退勤チェック
-    // =========================
-    if (isEndChanged) {
-      // 元の退勤が未来じゃないとNG
-      if (originalEndDt < now) {
-        editError.textContent = "このシフトは変更できません";
-        return;
-      }
-
-      // 変更後が過去もNG
-      if (endDt < now) {
-        editError.textContent = "シフト変更時間を過ぎています（退勤）";
-        return;
-      }
+    if (originalEndDt < now) {
+      editError.textContent = "このシフトは変更できません。公式LINEに相談してください";
+      return;
     }
-
-    // =========================
-    // ③ 時間整合性
-    // =========================
     if (startDt >= endDt) {
-      editError.textContent = "時間の設定が不正です";
+      editError.textContent = "時間の設定が不正です。公式LINEに相談してください";
       return;
     }
 
-    console.log("変更OK:", start, end);
-    alert(`シフトを保存しました: ${start} - ${end}`);
+    if (!confirm("このシフト変更を保存してもよろしいですか？")) return;
+
+    try {
+      resultDiv.textContent = "保存中…";
+
+      const profile = await liff.getProfile();
+      const payload = {
+        userId: profile.userId,
+        date: selectedDate,
+        start: newStart,
+        end: newEnd
+      };
+
+      const res = await fetch("GAS_URL", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error("保存リクエスト失敗");
+
+      const data = await res.json();
+      shiftData[selectedDate] = `${newStart}-${newEnd}`;
+
+      detailShift.textContent = shiftData[selectedDate];
+      editArea.style.display = "none";
+
+      alert("シフトを保存しました");
+      resultDiv.textContent = "";
+      generateCalendar(currentDate);
+      detailView.style.display = "none";
+      calendarView.style.display = "block";
+
+    } catch (err) {
+      alert("保存中にエラーが発生しました: " + err.message);
+    }
   });
 
   // =====================
   // 更新ボタン
   // =====================
   updateButton.addEventListener("click", async () => {
-    const profile = await liff.getProfile();
+    try {
+      const profile = await liff.getProfile();
+      const res = await fetch("GAS_URL?userId=" + profile.userId);
+      const data = await res.json();
 
-    const res = await fetch("https://script.google.com/macros/s/AKfycbwNi1gTg9is9-NpP51wAhH2qocLhCmdxDxc1fJSpodsWapo2-25oldV3RetjbxWMIey0A/exec?userId=" + profile.userId);
-    const data = await res.json();
+      shiftData = data.shifts || {};
 
-    shiftData = data.shifts || {};
+      firstMessageDiv.style.display = "none";
+      monthNavDiv.style.display = "flex";
 
-    firstMessageDiv.style.display = "none";
-    monthNavDiv.style.display = "flex";
-
-    generateCalendar(currentDate);
+      generateCalendar(currentDate);
+    } catch (err) {
+      resultDiv.textContent = "取得エラー: " + err.message;
+    }
   });
 
   prevMonthBtn.addEventListener("click", () => {
