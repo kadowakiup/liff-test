@@ -249,19 +249,19 @@ window.onload = async function () {
       const res = await fetch("https://script.google.com/macros/s/AKfycbwNi1gTg9is9-NpP51wAhH2qocLhCmdxDxc1fJSpodsWapo2-25oldV3RetjbxWMIey0A/exec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        mode: "no-cors"
       });
 
       if (!res.ok) throw new Error("保存リクエスト失敗");
 
-      const data = await res.json();
+      // const data = await res.json();
       shiftData[selectedDate] = `${newStart}-${newEnd}`;
 
       detailShift.textContent = shiftData[selectedDate];
       editArea.style.display = "none";
 
       alert("シフトを保存しました");
-      resultDiv.textContent = "";
       generateCalendar(currentDate);
       detailView.style.display = "none";
       calendarView.style.display = "block";
@@ -278,7 +278,7 @@ window.onload = async function () {
     try {
       const profile = await liff.getProfile();
       const res = await fetch("https://script.google.com/macros/s/AKfycbwNi1gTg9is9-NpP51wAhH2qocLhCmdxDxc1fJSpodsWapo2-25oldV3RetjbxWMIey0A/exec?userId=" + profile.userId);
-      const data = await res.json();
+      // const data = await res.json();
 
       shiftData = data.shifts || {};
 
