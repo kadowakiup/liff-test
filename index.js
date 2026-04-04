@@ -323,99 +323,32 @@ window.onload = async function () {
   // =====================
   // 更新ボタン
   // =====================
-  // ここ！
-  // updateButton.addEventListener("click", async () => {
-  //   try {
-  //     resultDiv.textContent = "更新中…";
-
-  //     const profile = await liff.getProfile();
-
-  //     const url =
-  //       GAS_URL +
-  //       "?action=fetch" +
-  //       "&userId=" + encodeURIComponent(profile.userId) +
-  //       "&name=" + encodeURIComponent(profile.displayName);
-
-  //     const res = await fetch(url);
-  //     const data = await res.json();
-
-  //     shiftData = data.shifts || {};
-
-  //     firstMessageDiv.style.display = "none";
-  //     monthNavDiv.style.display = "flex";
-  //     resultDiv.textContent = "";
-
-  //     generateCalendar(currentDate);
-
-  //   } catch (err) {
-  //     console.error(err);
-  //     resultDiv.textContent = "取得エラー: " + err.message;
-  //   }
-  // });
-    updateButton.addEventListener("click", async () => {
+  updateButton.addEventListener("click", async () => {
     try {
+      resultDiv.textContent = "更新中…";
+
       const profile = await liff.getProfile();
 
       const url =
         GAS_URL +
         "?action=fetch" +
         "&userId=" + encodeURIComponent(profile.userId) +
-        "&name=" + encodeURIComponent(profile.displayName) +
-        "&_t=" + Date.now();
+        "&name=" + encodeURIComponent(profile.displayName);
 
-      resultDiv.style.color = "black";
-      resultDiv.innerHTML =
-        "更新開始<br>" +
-        "時刻: " + new Date().toLocaleString() + "<br>" +
-        "URL: " + url;
-
-      const res = await fetch(url, { cache: "no-store" });
-      const rawText = await res.text();
-
-      resultDiv.innerHTML =
-        "更新開始<br>" +
-        "時刻: " + new Date().toLocaleString() + "<br>" +
-        "HTTPステータス: " + res.status + "<br>" +
-        "GAS返却: <br><pre style='white-space:pre-wrap;word-break:break-all;'>" +
-        escapeHtml(rawText) +
-        "</pre>";
-
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch (err) {
-        resultDiv.style.color = "red";
-        resultDiv.innerHTML +=
-          "<br>JSON変換エラー: " + escapeHtml(err.message);
-        return;
-      }
-
-      // ここ！
-      // 👇ここに追加
-      if (data.anycrossRaw) {
-        resultDiv.innerHTML +=
-          "<br>AnyCross生返却:<br><pre style='white-space:pre-wrap;word-break:break-all;'>" +
-          escapeHtml(data.anycrossRaw) +
-          "</pre>";
-      }
+      const res = await fetch(url);
+      const data = await res.json();
 
       shiftData = data.shifts || {};
 
       firstMessageDiv.style.display = "none";
       monthNavDiv.style.display = "flex";
+      resultDiv.textContent = "";
 
       generateCalendar(currentDate);
 
-      resultDiv.style.color = "green";
-      resultDiv.innerHTML += "<br>表示更新完了";
-
     } catch (err) {
       console.error(err);
-      resultDiv.style.color = "red";
-      resultDiv.innerHTML =
-        "取得エラー<br><pre style='white-space:pre-wrap;word-break:break-all;'>" +
-        escapeHtml(err.message) +
-        "</pre>";
+      resultDiv.textContent = "取得エラー: " + err.message;
     }
   });
 
