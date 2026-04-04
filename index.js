@@ -41,9 +41,7 @@ window.onload = async function () {
     // ログイン（開発のため）
     resultDiv.style.color = "black";
     resultDiv.innerHTML =
-      "LIFF初期化成功<br>" +
-      "isInClient: " + liff.isInClient() + "<br>" +
-      "isLoggedIn: " + liff.isLoggedIn();
+      "LIFF初期化成功<br>"
 
     if (!liff.isLoggedIn()) {
       resultDiv.innerHTML += "<br>LINEログインへ移動します…";
