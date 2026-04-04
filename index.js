@@ -981,23 +981,41 @@ window.onload = async function () {
 
         const profile = await liff.getProfile();
 
+        // やめてみる
+        // const res = await fetch(GAS_URL, {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json"
+        //   },
+        //   body: JSON.stringify({
+        //     action: "submitMedical",
+        //     userId: profile.userId,
+        //     name: profile.displayName,
+        //     shiftId: selectedShiftId,
+        //     date: selectedDateStr,
+        //     start: originalStart,
+        //     end: originalEnd,
+        //     fileName: medicalFileObj.name,
+        //     mimeType: medicalFileObj.type,
+        //     imageBase64: medicalImageBase64
+        //   })
+        // });
+        const formBody = new URLSearchParams({
+          action: "submitMedical",
+          userId: profile.userId,
+          name: profile.displayName,
+          shiftId: selectedShiftId,
+          date: selectedDateStr,
+          start: originalStart,
+          end: originalEnd,
+          fileName: medicalFileObj.name,
+          mimeType: medicalFileObj.type,
+          imageBase64: medicalImageBase64
+        });
+
         const res = await fetch(GAS_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            action: "submitMedical",
-            userId: profile.userId,
-            name: profile.displayName,
-            shiftId: selectedShiftId,
-            date: selectedDateStr,
-            start: originalStart,
-            end: originalEnd,
-            fileName: medicalFileObj.name,
-            mimeType: medicalFileObj.type,
-            imageBase64: medicalImageBase64
-          })
+          body: formBody
         });
 
         const data = await res.json();
