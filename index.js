@@ -47,6 +47,22 @@ window.onload = async function () {
   // LIFF初期化
   try {
     await liff.init({ liffId: "2009569390-ToBfmkCN" });
+
+    // ここ！
+    resultDiv.style.color = "black";
+    resultDiv.innerHTML =
+      "LIFF初期化成功<br>" +
+      "isInClient: " + liff.isInClient() + "<br>" +
+      "isLoggedIn: " + liff.isLoggedIn();
+
+    if (!liff.isLoggedIn()) {
+      resultDiv.innerHTML += "<br>LINEログインへ移動します…";
+      liff.login({
+        redirectUri: window.location.href
+      });
+      return;
+    }
+
   } catch (err) {
     console.error(err);
     resultDiv.textContent = "LIFF初期化エラー: " + err.message;
