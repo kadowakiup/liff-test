@@ -1,4 +1,4 @@
-// // 診断書提出完璧
+// // 完璧
 // window.onload = async function () {
 //   const calendarDiv = document.getElementById("calendar");
 //   const currentMonthSpan = document.getElementById("currentMonth");
@@ -58,11 +58,6 @@
 //     const d = new Date(dateStr + "T00:00:00");
 //     const week = ["日", "月", "火", "水", "木", "金", "土"];
 //     return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日(${week[d.getDay()]})`;
-//   }
-
-//   function removeSelectedShiftFromLocal() {
-//     const dayShifts = shiftData[selectedDateStr] || [];
-//     shiftData[selectedDateStr] = dayShifts.filter((s) => s.id !== selectedShiftId);
 //   }
 
 //   function clearMedicalPreviewUrl() {
@@ -189,7 +184,6 @@
 //     let blob = await resizeImageFile(file, 1200, 0.7);
 //     let base64 = await fileToBase64(blob);
 
-//     // まだ大きい場合はさらに圧縮
 //     if (base64.length > 4000000) {
 //       blob = await resizeImageFile(file, 1000, 0.6);
 //       base64 = await fileToBase64(blob);
@@ -218,6 +212,70 @@
 //       throw new Error(`JSON解析失敗: ${text}`);
 //     }
 //   }
+
+//   async function reloadShifts() {
+//     const profile = await liff.getProfile();
+
+//     const url =
+//       GAS_URL +
+//       "?action=fetch" +
+//       "&userId=" + encodeURIComponent(profile.userId) +
+//       "&name=" + encodeURIComponent(profile.displayName);
+
+//     const data = await fetchJson(url);
+
+//     if (!data.success) {
+//       throw new Error(data.message || "シフト取得に失敗しました");
+//     }
+
+//     shiftData = data.shifts || {};
+//     firstMessageDiv.style.display = "none";
+//     monthNavDiv.style.display = "flex";
+//     generateCalendar(currentDate);
+//   }
+
+//   function sleep(ms) {
+//     return new Promise((resolve) => setTimeout(resolve, ms));
+//   }
+
+//   function findShiftById(targetShiftId) {
+//     for (const dateKey in shiftData) {
+//       const dayShifts = shiftData[dateKey] || [];
+//       const found = dayShifts.find((s) => s.id === targetShiftId);
+//       if (found) {
+//         return {
+//           date: dateKey,
+//           shift: found
+//         };
+//       }
+//     }
+//     return null;
+//   }
+
+//   async function waitForShiftRefresh(checkFn, options = {}) {
+//     const {
+//       maxAttempts = 8,
+//       intervalMs = 1500,
+//       loadingMessage = "反映待ち…"
+//     } = options;
+
+//     for (let i = 0; i < maxAttempts; i++) {
+//       resultDiv.textContent = `${loadingMessage} (${i + 1}/${maxAttempts})`;
+
+//       await sleep(intervalMs);
+//       await reloadShifts();
+
+//       if (checkFn()) {
+//         resultDiv.textContent = "";
+//         return true;
+//       }
+//     }
+
+//     resultDiv.textContent = "";
+//     return false;
+//   }
+
+
 
 //   // =====================
 //   // LIFF初期化
@@ -466,23 +524,30 @@
 //           return;
 //         }
 
-//         const dayShifts = shiftData[selectedDateStr] || [];
-//         const targetShift = dayShifts.find((s) => s.id === selectedShiftId);
+//         const reflected = await waitForShiftRefresh(() => {
+//           const found = findShiftById(selectedShiftId);
+//           if (!found) return false;
 
-//         if (targetShift) {
-//           targetShift.start = newStart;
-//           targetShift.end = newEnd;
-//         }
+//           return found.shift.start === newStart && found.shift.end === newEnd;
+//         }, {
+//           maxAttempts: 8,
+//           intervalMs: 1500,
+//           loadingMessage: "時間変更の反映待ち…"
+//         });
 
-//         detailShift.textContent = `${newStart}-${newEnd}`;
 //         editArea.style.display = "none";
 
-//         alert(data.message || "シフトを保存しました");
+//         alert(
+//           reflected
+//             ? (data.message || "シフトを保存しました")
+//             : "時間変更の保存は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
+//         );
 
 //         resultDiv.textContent = "";
-//         generateCalendar(currentDate);
 //         detailView.style.display = "none";
 //         calendarView.style.display = "block";
+
+
 //       } catch (err) {
 //         console.error(err);
 //         editError.textContent = "保存中にエラーが発生しました";
@@ -533,14 +598,34 @@
 //           return;
 //         }
 
-//         removeSelectedShiftFromLocal();
-//         generateCalendar(currentDate);
+//         const reflected = await waitForShiftRefresh(() => {
+//           const found = findShiftById(selectedShiftId);
+
+//           // シフトが消えたら完了
+//           if (!found) return true;
+
+//           // 消えずに残る仕様なら、時間が空になったら完了扱い
+//           const startEmpty = !found.shift.start;
+//           const endEmpty = !found.shift.end;
+
+//           return startEmpty && endEmpty;
+//         }, {
+//           maxAttempts: 8,
+//           intervalMs: 1500,
+//           loadingMessage: "休み / 削除の反映待ち…"
+//         });
 
 //         detailView.style.display = "none";
 //         calendarView.style.display = "block";
 //         resultDiv.textContent = "";
 
-//         alert(data.message || "処理が完了しました");
+//         alert(
+//           reflected
+//             ? (data.message || "処理が完了しました")
+//             : "休み / 削除の処理は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
+//         );
+
+
 //       } catch (err) {
 //         console.error(err);
 //         resultDiv.textContent = "";
@@ -643,76 +728,123 @@
 //   // 診断書提出
 //   // =====================
 //   if (submitMedical) {
-//     submitMedical.addEventListener("click", async () => {
-//       try {
-//         medicalError.textContent = "";
+//   submitMedical.addEventListener("click", async () => {
+//     medicalError.textContent = "";
 
-//         if (!medicalFileObj || !medicalImageBase64) {
-//           medicalError.textContent = "診断書の写真をアップロードしてください";
-//           return;
-//         }
+//     if (!medicalFileObj || !medicalImageBase64) {
+//       medicalError.textContent = "診断書の写真をアップロードしてください";
+//       return;
+//     }
 
-//         if (medicalImageBase64.length > 4500000) {
-//           medicalError.textContent =
-//             "画像サイズが大きすぎます。もう少し小さい画像で試してください。";
-//           return;
-//         }
+//     if (medicalImageBase64.length > 4500000) {
+//       medicalError.textContent =
+//         "画像サイズが大きすぎます。もう少し小さい画像で試してください。";
+//       return;
+//     }
 
-//         const confirmMsg =
-//           "名前漢字フルネームと、日付が書いていますか？\n\n" +
-//           "問題なければ、この内容で提出します。";
+//     const confirmMsg =
+//       "名前漢字フルネームと、日付が書いていますか？\n\n" +
+//       "問題なければ、この内容で提出します。";
 
-//         if (!confirm(confirmMsg)) {
-//           return;
-//         }
+//     if (!confirm(confirmMsg)) {
+//       return;
+//     }
 
-//         setButtonsDisabled(true);
-//         resultDiv.textContent = "提出中…";
+//     setButtonsDisabled(true);
+//     resultDiv.textContent = "提出中…";
 
-//         const profile = await liff.getProfile();
+//     let submitSucceeded = false;
+//     let submitMessage =
+//       "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。";
 
-//         const formBody = new URLSearchParams({
-//           action: "submitMedical",
-//           userId: profile.userId,
-//           name: profile.displayName,
-//           shiftId: selectedShiftId,
-//           date: selectedDateStr,
-//           start: originalStart,
-//           end: originalEnd,
-//           fileName: medicalFileObj.name,
-//           mimeType: medicalFileObj.type,
-//           imageBase64: medicalImageBase64
-//         });
+//     try {
+//       const profile = await liff.getProfile();
 
-//         const data = await fetchJson(GAS_URL, {
-//           method: "POST",
-//           body: formBody
-//         });
+//       const formBody = new URLSearchParams({
+//         action: "submitMedical",
+//         userId: profile.userId,
+//         name: profile.displayName,
+//         shiftId: selectedShiftId,
+//         date: selectedDateStr,
+//         start: originalStart,
+//         end: originalEnd,
+//         fileName: medicalFileObj.name,
+//         mimeType: medicalFileObj.type,
+//         imageBase64: medicalImageBase64
+//       });
 
-//         if (!data.success) {
-//           medicalError.textContent = data.message || "診断書の提出に失敗しました";
-//           resultDiv.textContent = "";
-//           return;
-//         }
+//       const data = await fetchJson(GAS_URL, {
+//         method: "POST",
+//         body: formBody
+//       });
 
-//         alert(
-//           data.message ||
-//             "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。"
-//         );
-
+//       if (!data.success) {
+//         medicalError.textContent = data.message || "診断書の提出に失敗しました";
 //         resultDiv.textContent = "";
-//         resetMedicalArea();
-//         detailView.style.display = "none";
-//         calendarView.style.display = "block";
-//       } catch (err) {
-//         console.error(err);
-//         resultDiv.textContent = "";
-//         medicalError.textContent = "提出中にエラーが発生しました";
-//       } finally {
-//         setButtonsDisabled(false);
+//         return;
 //       }
-//     });
-//   }
+
+//       submitSucceeded = true;
+//       submitMessage = data.message || submitMessage;
+
+//     } catch (err) {
+//       console.error("submitMedical送信エラー:", err);
+//       resultDiv.textContent = "";
+//       medicalError.textContent =
+//         "診断書の提出に失敗しました: " + (err.message || err);
+//       return;
+//     }
+
+//     // ===== ここから先は「提出後の反映待ち」 =====
+//     try {
+//       resultDiv.textContent = "診断書提出後の反映待ち…";
+
+//       const reflected = await waitForShiftRefresh(() => {
+//         const found = findShiftById(selectedShiftId);
+
+//         // シフトが消えたらOK
+//         if (!found) return true;
+
+//         // 残る仕様なら勤務時間が空になったらOK
+//         const startEmpty = !found.shift.start;
+//         const endEmpty = !found.shift.end;
+
+//         return startEmpty && endEmpty;
+//       }, {
+//         maxAttempts: 8,
+//         intervalMs: 1500,
+//         loadingMessage: "診断書提出後の反映待ち…"
+//       });
+
+//       alert(
+//         reflected
+//           ? submitMessage
+//           : "診断書の提出は完了しました。Lark側の反映に時間がかかっているため、更新ボタンで再確認してください。"
+//       );
+
+//     } catch (err) {
+//       console.error("submitMedical反映待ちエラー:", err);
+
+//       // 提出自体が成功していれば、ここはエラー扱いにしない
+//       if (submitSucceeded) {
+//         alert(
+//           "診断書の提出は完了しました。画面反映の確認中にエラーが発生したため、更新ボタンで再確認してください。"
+//         );
+//       } else {
+//         medicalError.textContent =
+//           "診断書の提出後処理でエラーが発生しました: " + (err.message || err);
+//         resultDiv.textContent = "";
+//         return;
+//       }
+//     } finally {
+//       resultDiv.textContent = "";
+//       resetMedicalArea();
+//       detailView.style.display = "none";
+//       calendarView.style.display = "block";
+//       setButtonsDisabled(false);
+//     }
+//   });
+// }
 
 //   // =====================
 //   // 更新ボタン
@@ -722,29 +854,8 @@
 //       try {
 //         setButtonsDisabled(true);
 //         resultDiv.textContent = "更新中…";
-
-//         const profile = await liff.getProfile();
-
-//         const url =
-//           GAS_URL +
-//           "?action=fetch" +
-//           "&userId=" + encodeURIComponent(profile.userId) +
-//           "&name=" + encodeURIComponent(profile.displayName);
-
-//         const data = await fetchJson(url);
-
-//         if (!data.success) {
-//           resultDiv.textContent = data.message || "取得に失敗しました";
-//           return;
-//         }
-
-//         shiftData = data.shifts || {};
-
-//         firstMessageDiv.style.display = "none";
-//         monthNavDiv.style.display = "flex";
+//         await reloadShifts();
 //         resultDiv.textContent = "";
-
-//         generateCalendar(currentDate);
 //       } catch (err) {
 //         console.error(err);
 //         resultDiv.textContent = "取得エラー: " + err.message;
@@ -771,12 +882,6 @@
 //     });
 //   }
 // };
-
-
-
-
-
-
 
 
 
@@ -830,6 +935,7 @@ window.onload = async function () {
   let selectedDateStr = "";
   let originalStart = "";
   let originalEnd = "";
+  let originalState = "";
 
   // 診断書画像
   let medicalFileObj = null;
@@ -843,6 +949,72 @@ window.onload = async function () {
     const d = new Date(dateStr + "T00:00:00");
     const week = ["日", "月", "火", "水", "木", "金", "土"];
     return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日(${week[d.getDay()]})`;
+  }
+
+  function normalizeText(value) {
+    return String(value || "").trim();
+  }
+
+  function isAbsentState(state) {
+    return normalizeText(state) === "当欠";
+  }
+
+  function isMedicalSubmittedState(state) {
+    return normalizeText(state) === "診断書提出済み";
+  }
+
+  function isSpecialState(state) {
+    return isAbsentState(state) || isMedicalSubmittedState(state);
+  }
+
+  function getShiftDisplayText(shift) {
+    const state = normalizeText(shift?.state);
+    const start = normalizeText(shift?.start);
+    const end = normalizeText(shift?.end);
+
+    if (isSpecialState(state)) {
+      return state;
+    }
+
+    if (start && end) {
+      return `${start}-${end}`;
+    }
+
+    return "";
+  }
+
+  function hasEditableShiftTime(shift) {
+    const state = normalizeText(shift?.state);
+    const start = normalizeText(shift?.start);
+    const end = normalizeText(shift?.end);
+
+    return !isSpecialState(state) && !!start && !!end;
+  }
+
+  function updateDetailActionButtons(shift) {
+    const canEdit = hasEditableShiftTime(shift);
+
+    if (btnEdit) {
+      btnEdit.style.display = canEdit ? "inline-block" : "none";
+    }
+
+    if (btnDelete) {
+      btnDelete.style.display = canEdit ? "inline-block" : "none";
+    }
+
+    if (btnMedical) {
+      btnMedical.style.display = canEdit ? "inline-block" : "none";
+    }
+
+    if (!canEdit) {
+      if (editArea) {
+        editArea.style.display = "none";
+      }
+      if (editError) {
+        editError.textContent = "";
+      }
+      resetMedicalArea();
+    }
   }
 
   function clearMedicalPreviewUrl() {
@@ -1019,7 +1191,6 @@ window.onload = async function () {
     generateCalendar(currentDate);
   }
 
-  // ここ追加
   function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -1060,8 +1231,6 @@ window.onload = async function () {
     resultDiv.textContent = "";
     return false;
   }
-
-
 
   // =====================
   // LIFF初期化
@@ -1121,9 +1290,19 @@ window.onload = async function () {
       const dayShifts = shiftData[fullDateStr] || [];
 
       dayShifts.forEach((shift) => {
+        const displayText = getShiftDisplayText(shift);
+        if (!displayText) return;
+
         const shiftSpan = document.createElement("div");
         shiftSpan.className = "shift-time";
-        shiftSpan.textContent = `${shift.start}-${shift.end}`;
+        shiftSpan.textContent = displayText;
+
+        const state = normalizeText(shift.state);
+        if (isAbsentState(state)) {
+          shiftSpan.classList.add("state-absent");
+        } else if (isMedicalSubmittedState(state)) {
+          shiftSpan.classList.add("state-medical");
+        }
 
         shiftSpan.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -1145,16 +1324,18 @@ window.onload = async function () {
     detailView.style.display = "block";
 
     selectedDateStr = date;
-    selectedShiftId = shift.id;
-    originalStart = shift.start;
-    originalEnd = shift.end;
+    selectedShiftId = shift.id || "";
+    originalStart = normalizeText(shift.start);
+    originalEnd = normalizeText(shift.end);
+    originalState = normalizeText(shift.state);
 
     detailDate.textContent = formatDateJP(date);
-    detailShift.textContent = `${shift.start}-${shift.end}`;
+    detailShift.textContent = getShiftDisplayText(shift) || "表示できる情報がありません";
 
     editArea.style.display = "none";
     editError.textContent = "";
     resetMedicalArea();
+    updateDetailActionButtons(shift);
   }
 
   if (backButton) {
@@ -1244,6 +1425,12 @@ window.onload = async function () {
   // =====================
   if (btnEdit) {
     btnEdit.addEventListener("click", () => {
+      if (isSpecialState(originalState)) {
+        editArea.style.display = "none";
+        editError.textContent = "";
+        return;
+      }
+
       editArea.style.display = "block";
       editError.textContent = "";
       generateTimeOptions();
@@ -1310,24 +1497,14 @@ window.onload = async function () {
           return;
         }
 
-        // ここ直す
-        // await reloadShifts();
-
-        // detailShift.textContent = `${newStart}-${newEnd}`;
-        // editArea.style.display = "none";
-
-        // alert(data.message || "シフトを保存しました");
-
-        // resultDiv.textContent = "";
-        // detailView.style.display = "none";
-        // calendarView.style.display = "block";
-
-        // ここ追加
         const reflected = await waitForShiftRefresh(() => {
           const found = findShiftById(selectedShiftId);
           if (!found) return false;
 
-          return found.shift.start === newStart && found.shift.end === newEnd;
+          return (
+            normalizeText(found.shift.start) === newStart &&
+            normalizeText(found.shift.end) === newEnd
+          );
         }, {
           maxAttempts: 8,
           intervalMs: 1500,
@@ -1345,8 +1522,6 @@ window.onload = async function () {
         resultDiv.textContent = "";
         detailView.style.display = "none";
         calendarView.style.display = "block";
-
-
       } catch (err) {
         console.error(err);
         editError.textContent = "保存中にエラーが発生しました";
@@ -1397,27 +1572,16 @@ window.onload = async function () {
           return;
         }
 
-        // 直す
-        // await reloadShifts();
-
-        // detailView.style.display = "none";
-        // calendarView.style.display = "block";
-        // resultDiv.textContent = "";
-
-        // alert(data.message || "処理が完了しました");
-
-        // ここ追加
         const reflected = await waitForShiftRefresh(() => {
           const found = findShiftById(selectedShiftId);
 
-          // シフトが消えたら完了
           if (!found) return true;
 
-          // 消えずに残る仕様なら、時間が空になったら完了扱い
-          const startEmpty = !found.shift.start;
-          const endEmpty = !found.shift.end;
+          const state = normalizeText(found.shift.state);
+          const startEmpty = !normalizeText(found.shift.start);
+          const endEmpty = !normalizeText(found.shift.end);
 
-          return startEmpty && endEmpty;
+          return isAbsentState(state) || (startEmpty && endEmpty);
         }, {
           maxAttempts: 8,
           intervalMs: 1500,
@@ -1433,8 +1597,6 @@ window.onload = async function () {
             ? (data.message || "処理が完了しました")
             : "休み / 削除の処理は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
         );
-
-
       } catch (err) {
         console.error(err);
         resultDiv.textContent = "";
@@ -1536,232 +1698,119 @@ window.onload = async function () {
   // =====================
   // 診断書提出
   // =====================
-  // if (submitMedical) {
-  //   submitMedical.addEventListener("click", async () => {
-  //     try {
-  //       medicalError.textContent = "";
-
-  //       if (!medicalFileObj || !medicalImageBase64) {
-  //         medicalError.textContent = "診断書の写真をアップロードしてください";
-  //         return;
-  //       }
-
-  //       if (medicalImageBase64.length > 4500000) {
-  //         medicalError.textContent =
-  //           "画像サイズが大きすぎます。もう少し小さい画像で試してください。";
-  //         return;
-  //       }
-
-  //       const confirmMsg =
-  //         "名前漢字フルネームと、日付が書いていますか？\n\n" +
-  //         "問題なければ、この内容で提出します。";
-
-  //       if (!confirm(confirmMsg)) {
-  //         return;
-  //       }
-
-  //       setButtonsDisabled(true);
-  //       resultDiv.textContent = "提出中…";
-
-  //       const profile = await liff.getProfile();
-
-  //       const formBody = new URLSearchParams({
-  //         action: "submitMedical",
-  //         userId: profile.userId,
-  //         name: profile.displayName,
-  //         shiftId: selectedShiftId,
-  //         date: selectedDateStr,
-  //         start: originalStart,
-  //         end: originalEnd,
-  //         fileName: medicalFileObj.name,
-  //         mimeType: medicalFileObj.type,
-  //         imageBase64: medicalImageBase64
-  //       });
-
-  //       const data = await fetchJson(GAS_URL, {
-  //         method: "POST",
-  //         body: formBody
-  //       });
-
-  //       if (!data.success) {
-  //         medicalError.textContent = data.message || "診断書の提出に失敗しました";
-  //         resultDiv.textContent = "";
-  //         return;
-  //       }
-
-  //       // ここ直した
-  //       // await reloadShifts();
-
-  //       // alert(
-  //       //   data.message ||
-  //       //     "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。"
-  //       // );
-
-  //       // resultDiv.textContent = "";
-  //       // resetMedicalArea();
-  //       // detailView.style.display = "none";
-  //       // calendarView.style.display = "block";
-
-  //       // ここ追加
-  //       const reflected = await waitForShiftRefresh(() => {
-  //       const found = getShiftByIdFromShiftData(selectedShiftId);
-
-  //       // シフト自体が消えていればOK
-  //       if (!found) return true;
-
-  //       // Lark側の後処理がまだ終わっていない
-  //       // 「勤務時間が消える」のが完了条件なら、
-  //       // start/end が空になる想定に合わせて判定
-  //       const startEmpty = !found.shift.start;
-  //       const endEmpty = !found.shift.end;
-
-  //       return startEmpty && endEmpty;
-  //     }, {
-  //       maxAttempts: 8,
-  //       intervalMs: 1500,
-  //       loadingMessage: "診断書提出後の反映待ち…"
-  //     });
-
-  //     alert(
-  //       reflected
-  //         ? (data.message || "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。")
-  //         : "診断書の提出は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
-  //     );
-
-  //     resultDiv.textContent = "";
-  //     resetMedicalArea();
-  //     detailView.style.display = "none";
-  //     calendarView.style.display = "block";
-
-
-
-  //     } catch (err) {
-  //       console.error(err);
-  //       resultDiv.textContent = "";
-  //       medicalError.textContent = "提出中にエラーが発生しました";
-  //     } finally {
-  //       setButtonsDisabled(false);
-  //     }
-  //   });
-  // }
   if (submitMedical) {
-  submitMedical.addEventListener("click", async () => {
-    medicalError.textContent = "";
+    submitMedical.addEventListener("click", async () => {
+      medicalError.textContent = "";
 
-    if (!medicalFileObj || !medicalImageBase64) {
-      medicalError.textContent = "診断書の写真をアップロードしてください";
-      return;
-    }
-
-    if (medicalImageBase64.length > 4500000) {
-      medicalError.textContent =
-        "画像サイズが大きすぎます。もう少し小さい画像で試してください。";
-      return;
-    }
-
-    const confirmMsg =
-      "名前漢字フルネームと、日付が書いていますか？\n\n" +
-      "問題なければ、この内容で提出します。";
-
-    if (!confirm(confirmMsg)) {
-      return;
-    }
-
-    setButtonsDisabled(true);
-    resultDiv.textContent = "提出中…";
-
-    let submitSucceeded = false;
-    let submitMessage =
-      "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。";
-
-    try {
-      const profile = await liff.getProfile();
-
-      const formBody = new URLSearchParams({
-        action: "submitMedical",
-        userId: profile.userId,
-        name: profile.displayName,
-        shiftId: selectedShiftId,
-        date: selectedDateStr,
-        start: originalStart,
-        end: originalEnd,
-        fileName: medicalFileObj.name,
-        mimeType: medicalFileObj.type,
-        imageBase64: medicalImageBase64
-      });
-
-      const data = await fetchJson(GAS_URL, {
-        method: "POST",
-        body: formBody
-      });
-
-      if (!data.success) {
-        medicalError.textContent = data.message || "診断書の提出に失敗しました";
-        resultDiv.textContent = "";
+      if (!medicalFileObj || !medicalImageBase64) {
+        medicalError.textContent = "診断書の写真をアップロードしてください";
         return;
       }
 
-      submitSucceeded = true;
-      submitMessage = data.message || submitMessage;
-
-    } catch (err) {
-      console.error("submitMedical送信エラー:", err);
-      resultDiv.textContent = "";
-      medicalError.textContent =
-        "診断書の提出に失敗しました: " + (err.message || err);
-      return;
-    }
-
-    // ===== ここから先は「提出後の反映待ち」 =====
-    try {
-      resultDiv.textContent = "診断書提出後の反映待ち…";
-
-      const reflected = await waitForShiftRefresh(() => {
-        const found = findShiftById(selectedShiftId);
-
-        // シフトが消えたらOK
-        if (!found) return true;
-
-        // 残る仕様なら勤務時間が空になったらOK
-        const startEmpty = !found.shift.start;
-        const endEmpty = !found.shift.end;
-
-        return startEmpty && endEmpty;
-      }, {
-        maxAttempts: 8,
-        intervalMs: 1500,
-        loadingMessage: "診断書提出後の反映待ち…"
-      });
-
-      alert(
-        reflected
-          ? submitMessage
-          : "診断書の提出は完了しました。Lark側の反映に時間がかかっているため、更新ボタンで再確認してください。"
-      );
-
-    } catch (err) {
-      console.error("submitMedical反映待ちエラー:", err);
-
-      // 提出自体が成功していれば、ここはエラー扱いにしない
-      if (submitSucceeded) {
-        alert(
-          "診断書の提出は完了しました。画面反映の確認中にエラーが発生したため、更新ボタンで再確認してください。"
-        );
-      } else {
+      if (medicalImageBase64.length > 4500000) {
         medicalError.textContent =
-          "診断書の提出後処理でエラーが発生しました: " + (err.message || err);
-        resultDiv.textContent = "";
+          "画像サイズが大きすぎます。もう少し小さい画像で試してください。";
         return;
       }
-    } finally {
-      resultDiv.textContent = "";
-      resetMedicalArea();
-      detailView.style.display = "none";
-      calendarView.style.display = "block";
-      setButtonsDisabled(false);
-    }
-  });
-}
+
+      const confirmMsg =
+        "名前漢字フルネームと、日付が書いていますか？\n\n" +
+        "問題なければ、この内容で提出します。";
+
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+
+      setButtonsDisabled(true);
+      resultDiv.textContent = "提出中…";
+
+      let submitSucceeded = false;
+      let submitMessage =
+        "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。";
+
+      try {
+        const profile = await liff.getProfile();
+
+        const formBody = new URLSearchParams({
+          action: "submitMedical",
+          userId: profile.userId,
+          name: profile.displayName,
+          shiftId: selectedShiftId,
+          date: selectedDateStr,
+          start: originalStart,
+          end: originalEnd,
+          fileName: medicalFileObj.name,
+          mimeType: medicalFileObj.type,
+          imageBase64: medicalImageBase64
+        });
+
+        const data = await fetchJson(GAS_URL, {
+          method: "POST",
+          body: formBody
+        });
+
+        if (!data.success) {
+          medicalError.textContent = data.message || "診断書の提出に失敗しました";
+          resultDiv.textContent = "";
+          return;
+        }
+
+        submitSucceeded = true;
+        submitMessage = data.message || submitMessage;
+      } catch (err) {
+        console.error("submitMedical送信エラー:", err);
+        resultDiv.textContent = "";
+        medicalError.textContent =
+          "診断書の提出に失敗しました: " + (err.message || err);
+        return;
+      }
+
+      try {
+        resultDiv.textContent = "診断書提出後の反映待ち…";
+
+        const reflected = await waitForShiftRefresh(() => {
+          const found = findShiftById(selectedShiftId);
+
+          if (!found) return true;
+
+          const state = normalizeText(found.shift.state);
+          const startEmpty = !normalizeText(found.shift.start);
+          const endEmpty = !normalizeText(found.shift.end);
+
+          return isMedicalSubmittedState(state) || (startEmpty && endEmpty);
+        }, {
+          maxAttempts: 8,
+          intervalMs: 1500,
+          loadingMessage: "診断書提出後の反映待ち…"
+        });
+
+        alert(
+          reflected
+            ? submitMessage
+            : "診断書の提出は完了しました。Lark側の反映に時間がかかっているため、更新ボタンで再確認してください。"
+        );
+      } catch (err) {
+        console.error("submitMedical反映待ちエラー:", err);
+
+        if (submitSucceeded) {
+          alert(
+            "診断書の提出は完了しました。画面反映の確認中にエラーが発生したため、更新ボタンで再確認してください。"
+          );
+        } else {
+          medicalError.textContent =
+            "診断書の提出後処理でエラーが発生しました: " + (err.message || err);
+          resultDiv.textContent = "";
+          return;
+        }
+      } finally {
+        resultDiv.textContent = "";
+        resetMedicalArea();
+        detailView.style.display = "none";
+        calendarView.style.display = "block";
+        setButtonsDisabled(false);
+      }
+    });
+  }
 
   // =====================
   // 更新ボタン
