@@ -1096,8 +1096,13 @@ window.onload = async function () {
 
     const showEdit = canEditBase && isTodayOrFuture(selectedDateStr);
     const showDelete = canEditBase && isTodayOrFuture(selectedDateStr);
+
+    const targetDate = getDateOnly(new Date(selectedDateStr + "T00:00:00"));
+    const today = getDateOnly(new Date());
+    const isToday = targetDate.getTime() === today.getTime();
+
     const showMedical =
-      (canEditBase && isTodayOrPast(selectedDateStr)) || isAbsentState(state);
+      (canEditBase && isToday) || isAbsentState(state);
 
     if (btnEdit) {
       btnEdit.style.display = showEdit ? "inline-block" : "none";
@@ -1742,8 +1747,12 @@ window.onload = async function () {
         state: originalState
       };
 
+      const targetDate = getDateOnly(new Date(selectedDateStr + "T00:00:00"));
+      const today = getDateOnly(new Date());
+      const isToday = targetDate.getTime() === today.getTime();
+
       const canOpenMedical =
-        (hasEditableShiftTime(dummyShift) && isTodayOrPast(selectedDateStr)) ||
+        (hasEditableShiftTime(dummyShift) && isToday) ||
         isAbsentState(originalState);
 
       if (!canOpenMedical) {
