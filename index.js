@@ -1536,82 +1536,193 @@ window.onload = async function () {
   // =====================
   // 診断書提出
   // =====================
+  // if (submitMedical) {
+  //   submitMedical.addEventListener("click", async () => {
+  //     try {
+  //       medicalError.textContent = "";
+
+  //       if (!medicalFileObj || !medicalImageBase64) {
+  //         medicalError.textContent = "診断書の写真をアップロードしてください";
+  //         return;
+  //       }
+
+  //       if (medicalImageBase64.length > 4500000) {
+  //         medicalError.textContent =
+  //           "画像サイズが大きすぎます。もう少し小さい画像で試してください。";
+  //         return;
+  //       }
+
+  //       const confirmMsg =
+  //         "名前漢字フルネームと、日付が書いていますか？\n\n" +
+  //         "問題なければ、この内容で提出します。";
+
+  //       if (!confirm(confirmMsg)) {
+  //         return;
+  //       }
+
+  //       setButtonsDisabled(true);
+  //       resultDiv.textContent = "提出中…";
+
+  //       const profile = await liff.getProfile();
+
+  //       const formBody = new URLSearchParams({
+  //         action: "submitMedical",
+  //         userId: profile.userId,
+  //         name: profile.displayName,
+  //         shiftId: selectedShiftId,
+  //         date: selectedDateStr,
+  //         start: originalStart,
+  //         end: originalEnd,
+  //         fileName: medicalFileObj.name,
+  //         mimeType: medicalFileObj.type,
+  //         imageBase64: medicalImageBase64
+  //       });
+
+  //       const data = await fetchJson(GAS_URL, {
+  //         method: "POST",
+  //         body: formBody
+  //       });
+
+  //       if (!data.success) {
+  //         medicalError.textContent = data.message || "診断書の提出に失敗しました";
+  //         resultDiv.textContent = "";
+  //         return;
+  //       }
+
+  //       // ここ直した
+  //       // await reloadShifts();
+
+  //       // alert(
+  //       //   data.message ||
+  //       //     "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。"
+  //       // );
+
+  //       // resultDiv.textContent = "";
+  //       // resetMedicalArea();
+  //       // detailView.style.display = "none";
+  //       // calendarView.style.display = "block";
+
+  //       // ここ追加
+  //       const reflected = await waitForShiftRefresh(() => {
+  //       const found = getShiftByIdFromShiftData(selectedShiftId);
+
+  //       // シフト自体が消えていればOK
+  //       if (!found) return true;
+
+  //       // Lark側の後処理がまだ終わっていない
+  //       // 「勤務時間が消える」のが完了条件なら、
+  //       // start/end が空になる想定に合わせて判定
+  //       const startEmpty = !found.shift.start;
+  //       const endEmpty = !found.shift.end;
+
+  //       return startEmpty && endEmpty;
+  //     }, {
+  //       maxAttempts: 8,
+  //       intervalMs: 1500,
+  //       loadingMessage: "診断書提出後の反映待ち…"
+  //     });
+
+  //     alert(
+  //       reflected
+  //         ? (data.message || "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。")
+  //         : "診断書の提出は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
+  //     );
+
+  //     resultDiv.textContent = "";
+  //     resetMedicalArea();
+  //     detailView.style.display = "none";
+  //     calendarView.style.display = "block";
+
+
+
+  //     } catch (err) {
+  //       console.error(err);
+  //       resultDiv.textContent = "";
+  //       medicalError.textContent = "提出中にエラーが発生しました";
+  //     } finally {
+  //       setButtonsDisabled(false);
+  //     }
+  //   });
+  // }
   if (submitMedical) {
-    submitMedical.addEventListener("click", async () => {
-      try {
-        medicalError.textContent = "";
+  submitMedical.addEventListener("click", async () => {
+    medicalError.textContent = "";
 
-        if (!medicalFileObj || !medicalImageBase64) {
-          medicalError.textContent = "診断書の写真をアップロードしてください";
-          return;
-        }
+    if (!medicalFileObj || !medicalImageBase64) {
+      medicalError.textContent = "診断書の写真をアップロードしてください";
+      return;
+    }
 
-        if (medicalImageBase64.length > 4500000) {
-          medicalError.textContent =
-            "画像サイズが大きすぎます。もう少し小さい画像で試してください。";
-          return;
-        }
+    if (medicalImageBase64.length > 4500000) {
+      medicalError.textContent =
+        "画像サイズが大きすぎます。もう少し小さい画像で試してください。";
+      return;
+    }
 
-        const confirmMsg =
-          "名前漢字フルネームと、日付が書いていますか？\n\n" +
-          "問題なければ、この内容で提出します。";
+    const confirmMsg =
+      "名前漢字フルネームと、日付が書いていますか？\n\n" +
+      "問題なければ、この内容で提出します。";
 
-        if (!confirm(confirmMsg)) {
-          return;
-        }
+    if (!confirm(confirmMsg)) {
+      return;
+    }
 
-        setButtonsDisabled(true);
-        resultDiv.textContent = "提出中…";
+    setButtonsDisabled(true);
+    resultDiv.textContent = "提出中…";
 
-        const profile = await liff.getProfile();
+    let submitSucceeded = false;
+    let submitMessage =
+      "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。";
 
-        const formBody = new URLSearchParams({
-          action: "submitMedical",
-          userId: profile.userId,
-          name: profile.displayName,
-          shiftId: selectedShiftId,
-          date: selectedDateStr,
-          start: originalStart,
-          end: originalEnd,
-          fileName: medicalFileObj.name,
-          mimeType: medicalFileObj.type,
-          imageBase64: medicalImageBase64
-        });
+    try {
+      const profile = await liff.getProfile();
 
-        const data = await fetchJson(GAS_URL, {
-          method: "POST",
-          body: formBody
-        });
+      const formBody = new URLSearchParams({
+        action: "submitMedical",
+        userId: profile.userId,
+        name: profile.displayName,
+        shiftId: selectedShiftId,
+        date: selectedDateStr,
+        start: originalStart,
+        end: originalEnd,
+        fileName: medicalFileObj.name,
+        mimeType: medicalFileObj.type,
+        imageBase64: medicalImageBase64
+      });
 
-        if (!data.success) {
-          medicalError.textContent = data.message || "診断書の提出に失敗しました";
-          resultDiv.textContent = "";
-          return;
-        }
+      const data = await fetchJson(GAS_URL, {
+        method: "POST",
+        body: formBody
+      });
 
-        // ここ直した
-        // await reloadShifts();
+      if (!data.success) {
+        medicalError.textContent = data.message || "診断書の提出に失敗しました";
+        resultDiv.textContent = "";
+        return;
+      }
 
-        // alert(
-        //   data.message ||
-        //     "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。"
-        // );
+      submitSucceeded = true;
+      submitMessage = data.message || submitMessage;
 
-        // resultDiv.textContent = "";
-        // resetMedicalArea();
-        // detailView.style.display = "none";
-        // calendarView.style.display = "block";
+    } catch (err) {
+      console.error("submitMedical送信エラー:", err);
+      resultDiv.textContent = "";
+      medicalError.textContent =
+        "診断書の提出に失敗しました: " + (err.message || err);
+      return;
+    }
 
-        // ここ追加
-        const reflected = await waitForShiftRefresh(() => {
-        const found = getShiftByIdFromShiftData(selectedShiftId);
+    // ===== ここから先は「提出後の反映待ち」 =====
+    try {
+      resultDiv.textContent = "診断書提出後の反映待ち…";
 
-        // シフト自体が消えていればOK
+      const reflected = await waitForShiftRefresh(() => {
+        const found = findShiftById(selectedShiftId);
+
+        // シフトが消えたらOK
         if (!found) return true;
 
-        // Lark側の後処理がまだ終わっていない
-        // 「勤務時間が消える」のが完了条件なら、
-        // start/end が空になる想定に合わせて判定
+        // 残る仕様なら勤務時間が空になったらOK
         const startEmpty = !found.shift.start;
         const endEmpty = !found.shift.end;
 
@@ -1624,26 +1735,33 @@ window.onload = async function () {
 
       alert(
         reflected
-          ? (data.message || "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。")
-          : "診断書の提出は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
+          ? submitMessage
+          : "診断書の提出は完了しました。Lark側の反映に時間がかかっているため、更新ボタンで再確認してください。"
       );
 
+    } catch (err) {
+      console.error("submitMedical反映待ちエラー:", err);
+
+      // 提出自体が成功していれば、ここはエラー扱いにしない
+      if (submitSucceeded) {
+        alert(
+          "診断書の提出は完了しました。画面反映の確認中にエラーが発生したため、更新ボタンで再確認してください。"
+        );
+      } else {
+        medicalError.textContent =
+          "診断書の提出後処理でエラーが発生しました: " + (err.message || err);
+        resultDiv.textContent = "";
+        return;
+      }
+    } finally {
       resultDiv.textContent = "";
       resetMedicalArea();
       detailView.style.display = "none";
       calendarView.style.display = "block";
-
-
-
-      } catch (err) {
-        console.error(err);
-        resultDiv.textContent = "";
-        medicalError.textContent = "提出中にエラーが発生しました";
-      } finally {
-        setButtonsDisabled(false);
-      }
-    });
-  }
+      setButtonsDisabled(false);
+    }
+  });
+}
 
   // =====================
   // 更新ボタン
