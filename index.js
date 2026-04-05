@@ -46,7 +46,11 @@ window.onload = async function () {
   let currentDate = new Date();
 
   let fetchedName = "";
-  let fetchedWorktime = "";
+  let worktimePrev = "";
+  let worktimeCurrent = "";
+  let worktimeNext = "";
+  let baseYear = currentDate.getFullYear();
+  let baseMonth = currentDate.getMonth();
 
   // 選択中シフト情報
   let selectedShiftId = "";
@@ -63,6 +67,29 @@ window.onload = async function () {
   // =====================
   // 共通関数
   // =====================
+  function updateWorktimeDisplay() {
+    if (!workTimeSpan) return;
+
+    const monthDiff =
+      (currentDate.getFullYear() - baseYear) * 12 +
+      (currentDate.getMonth() - baseMonth);
+
+    let targetWorktime = "";
+
+    if (monthDiff === -1) {
+      targetWorktime = worktimePrev;
+    } else if (monthDiff === 0) {
+      targetWorktime = worktimeCurrent;
+    } else if (monthDiff === 1) {
+      targetWorktime = worktimeNext;
+    } else {
+      targetWorktime = "";
+    }
+
+    workTimeSpan.textContent =
+      targetWorktime !== "" ? `${targetWorktime}時間` : "";
+  }
+
   function formatDateJP(dateStr) {
     const d = new Date(dateStr + "T00:00:00");
     const week = ["日", "月", "火", "水", "木", "金", "土"];
@@ -337,20 +364,22 @@ window.onload = async function () {
 
     shiftData = data.shifts || {};
     fetchedName = data.name || "";
-    fetchedWorktime = data.worktime ?? "";
+    worktimePrev = data.worktimePrev ?? "";
+    worktimeCurrent = data.worktimeCurrent ?? "";
+    worktimeNext = data.worktimeNext ?? "";
+
+    baseYear = new Date().getFullYear();
+    baseMonth = new Date().getMonth();
 
     if (userNameSpan) {
       userNameSpan.textContent = fetchedName;
     }
 
-    if (workTimeSpan) {
-      workTimeSpan.textContent =
-        fetchedWorktime !== "" ? `${fetchedWorktime}時間` : "";
-    }
-
     if (summaryDiv) {
       summaryDiv.style.display = "block";
     }
+
+    updateWorktimeDisplay();
 
     firstMessageDiv.style.display = "none";
     monthNavDiv.style.display = "flex";
@@ -1059,6 +1088,7 @@ window.onload = async function () {
     prevMonthBtn.addEventListener("click", () => {
       currentDate.setMonth(currentDate.getMonth() - 1);
       generateCalendar(currentDate);
+      updateWorktimeDisplay();
     });
   }
 
@@ -1066,6 +1096,7 @@ window.onload = async function () {
     nextMonthBtn.addEventListener("click", () => {
       currentDate.setMonth(currentDate.getMonth() + 1);
       generateCalendar(currentDate);
+      updateWorktimeDisplay();
     });
   }
 };
