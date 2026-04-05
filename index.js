@@ -1019,6 +1019,49 @@ window.onload = async function () {
     generateCalendar(currentDate);
   }
 
+  // ここ追加
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function getShiftByIdFromShiftData(targetShiftId) {
+    for (const dateKey in shiftData) {
+      const dayShifts = shiftData[dateKey] || [];
+      const found = dayShifts.find((s) => s.id === targetShiftId);
+      if (found) {
+        return {
+          date: dateKey,
+          shift: found
+        };
+      }
+    }
+    return null;
+  }
+
+  async function waitForShiftRefresh(checkFn, options = {}) {
+    const {
+      maxAttempts = 6,
+      intervalMs = 1500,
+      loadingMessage = "反映待ち…"
+    } = options;
+
+    for (let i = 0; i < maxAttempts; i++) {
+      resultDiv.textContent = `${loadingMessage} (${i + 1}/${maxAttempts})`;
+
+      await sleep(intervalMs);
+      await reloadShifts();
+
+      const ok = checkFn();
+      if (ok) {
+        resultDiv.textContent = "";
+        return true;
+      }
+    }
+
+    resultDiv.textContent = "";
+    return false;
+  }
+
   // =====================
   // LIFF初期化
   // =====================
@@ -1487,17 +1530,52 @@ window.onload = async function () {
           return;
         }
 
-        await reloadShifts();
+        // ここ直した
+        // await reloadShifts();
 
-        alert(
-          data.message ||
-            "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。"
-        );
+        // alert(
+        //   data.message ||
+        //     "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。"
+        // );
 
-        resultDiv.textContent = "";
-        resetMedicalArea();
-        detailView.style.display = "none";
-        calendarView.style.display = "block";
+        // resultDiv.textContent = "";
+        // resetMedicalArea();
+        // detailView.style.display = "none";
+        // calendarView.style.display = "block";
+
+        // ここ追加
+        const reflected = await waitForShiftRefresh(() => {
+        const found = getShiftByIdFromShiftData(selectedShiftId);
+
+        // シフト自体が消えていればOK
+        if (!found) return true;
+
+        // Lark側の後処理がまだ終わっていない
+        // 「勤務時間が消える」のが完了条件なら、
+        // start/end が空になる想定に合わせて判定
+        const startEmpty = !found.shift.start;
+        const endEmpty = !found.shift.end;
+
+        return startEmpty && endEmpty;
+      }, {
+        maxAttempts: 8,
+        intervalMs: 1500,
+        loadingMessage: "診断書提出後の反映待ち…"
+      });
+
+      alert(
+        reflected
+          ? (data.message || "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。")
+          : "診断書の提出は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
+      );
+
+      resultDiv.textContent = "";
+      resetMedicalArea();
+      detailView.style.display = "none";
+      calendarView.style.display = "block";
+
+
+      
       } catch (err) {
         console.error(err);
         resultDiv.textContent = "";
