@@ -1211,6 +1211,9 @@ window.onload = async function () {
   let originalEnd = "";
   let originalState = "";
 
+  // 画面モード
+  let detailMode = "view"; // "view" | "add"
+
   // 診断書画像
   let medicalFileObj = null;
   let medicalImageBase64 = "";
@@ -1318,46 +1321,6 @@ window.onload = async function () {
     return Array.isArray(dayShifts) && dayShifts.length > 0;
   }
 
-  function updateDetailActionButtons(shift) {
-    const state = normalizeText(shift?.state);
-    const canEditBase = hasEditableShiftTime(shift);
-
-    const showEdit = canEditBase && isTodayOrFuture(selectedDateStr);
-    const showDelete = canEditBase && isTodayOrFuture(selectedDateStr);
-
-    const targetDate = getDateOnly(new Date(selectedDateStr + "T00:00:00"));
-    const today = getDateOnly(new Date());
-    const isToday = targetDate.getTime() === today.getTime();
-
-    const showMedical =
-      (canEditBase && isToday) || isAbsentState(state);
-
-    if (btnEdit) {
-      btnEdit.style.display = showEdit ? "inline-block" : "none";
-    }
-
-    if (btnDelete) {
-      btnDelete.style.display = showDelete ? "inline-block" : "none";
-    }
-
-    if (btnMedical) {
-      btnMedical.style.display = showMedical ? "inline-block" : "none";
-    }
-
-    if (!showEdit) {
-      if (editArea) {
-        editArea.style.display = "none";
-      }
-      if (editError) {
-        editError.textContent = "";
-      }
-    }
-
-    if (!showMedical) {
-      resetMedicalArea();
-    }
-  }
-
   function clearMedicalPreviewUrl() {
     if (medicalPreviewObjectUrl) {
       URL.revokeObjectURL(medicalPreviewObjectUrl);
@@ -1390,6 +1353,19 @@ window.onload = async function () {
 
     medicalFileObj = null;
     medicalImageBase64 = "";
+  }
+
+  function resetDetailState() {
+    selectedShiftId = "";
+    selectedDateStr = "";
+    originalStart = "";
+    originalEnd = "";
+    originalState = "";
+    detailMode = "view";
+
+    if (editArea) editArea.style.display = "none";
+    if (editError) editError.textContent = "";
+    resetMedicalArea();
   }
 
   function setButtonsDisabled(disabled) {
@@ -1597,226 +1573,54 @@ window.onload = async function () {
     return false;
   }
 
-  async function addShiftForDate(dateStr) {
-    const msg =
-      `${formatDateJP(dateStr)} のシフト追加申請を行います。\n\n` +
-      `よろしいですか？`;
-
-    if (!confirm(msg)) {
+  function updateDetailActionButtons(shift) {
+    if (detailMode === "add") {
+      if (btnEdit) btnEdit.style.display = "none";
+      if (btnDelete) btnDelete.style.display = "none";
+      if (btnMedical) btnMedical.style.display = "none";
       return;
     }
 
-    try {
-      setButtonsDisabled(true);
-      resultDiv.textContent = "追加処理中…";
+    const state = normalizeText(shift?.state);
+    const canEditBase = hasEditableShiftTime(shift);
 
-      const profile = await liff.getProfile();
+    const showEdit = canEditBase && isTodayOrFuture(selectedDateStr);
+    const showDelete = canEditBase && isTodayOrFuture(selectedDateStr);
 
-      const url =
-        GAS_URL +
-        "?action=addShift" +
-        "&userId=" + encodeURIComponent(profile.userId) +
-        "&name=" + encodeURIComponent(profile.displayName) +
-        "&date=" + encodeURIComponent(dateStr);
+    const targetDate = getDateOnly(new Date(selectedDateStr + "T00:00:00"));
+    const today = getDateOnly(new Date());
+    const isToday = targetDate.getTime() === today.getTime();
 
-      const data = await fetchJson(url);
+    const showMedical =
+      (canEditBase && isToday) || isAbsentState(state);
 
-      if (!data.success) {
-        alert(data.message || "シフト追加に失敗しました");
-        resultDiv.textContent = "";
-        return;
+    if (btnEdit) {
+      btnEdit.style.display = showEdit ? "inline-block" : "none";
+    }
+
+    if (btnDelete) {
+      btnDelete.style.display = showDelete ? "inline-block" : "none";
+    }
+
+    if (btnMedical) {
+      btnMedical.style.display = showMedical ? "inline-block" : "none";
+    }
+
+    if (!showEdit) {
+      if (editArea) {
+        editArea.style.display = "none";
       }
-
-      const reflected = await waitForShiftRefresh(() => {
-        const dayShifts = shiftData[dateStr] || [];
-        return hasAnyShiftRecordOnDay(dayShifts) || hasVisibleShiftOnDay(dayShifts);
-      }, {
-        maxAttempts: 8,
-        intervalMs: 1500,
-        loadingMessage: "シフト追加の反映待ち…"
-      });
-
-      resultDiv.textContent = "";
-
-      alert(
-        reflected
-          ? (data.message || "シフト追加が完了しました")
-          : "シフト追加の処理は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
-      );
-
-      calendarView.style.display = "block";
-      detailView.style.display = "none";
-      generateCalendar(currentDate);
-    } catch (err) {
-      console.error(err);
-      resultDiv.textContent = "";
-      alert("シフト追加中にエラーが発生しました");
-    } finally {
-      setButtonsDisabled(false);
-    }
-  }
-
-  // =====================
-  // LIFF初期化
-  // =====================
-  try {
-    await liff.init({ liffId: "2009569390-ToBfmkCN" });
-
-    resultDiv.style.color = "black";
-    resultDiv.innerHTML = "LIFF初期化成功<br>";
-
-    if (!liff.isLoggedIn()) {
-      resultDiv.innerHTML += "<br>LINEログインへ移動します…";
-      liff.login({
-        redirectUri: window.location.href
-      });
-      return;
-    }
-  } catch (err) {
-    console.error(err);
-    resultDiv.textContent = "LIFF初期化エラー: " + err.message;
-    return;
-  }
-
-  // =====================
-  // カレンダー生成
-  // =====================
-  function generateCalendar(date) {
-    calendarDiv.innerHTML = "";
-
-    const weekHeader = document.createElement("div");
-    weekHeader.className = "week-header";
-
-    const weekList = ["日", "月", "火", "水", "木", "金", "土"];
-
-    weekList.forEach((w, index) => {
-      const cell = document.createElement("div");
-      cell.className = "week-cell";
-      cell.textContent = w;
-
-      if (index === 0) cell.style.color = "#d93025";
-      if (index === 6) cell.style.color = "#1a73e8";
-
-      weekHeader.appendChild(cell);
-    });
-
-    calendarDiv.appendChild(weekHeader);
-
-    const year = date.getFullYear();
-    const month = date.getMonth();
-
-    currentMonthSpan.textContent = `${year}年 ${month + 1}月`;
-
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDay = firstDay.getDay();
-
-    for (let i = 0; i < startDay; i++) {
-      const emptyDiv = document.createElement("div");
-      emptyDiv.className = "day";
-      calendarDiv.appendChild(emptyDiv);
-    }
-
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-      const fullDateStr =
-        `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-      const dayDiv = document.createElement("div");
-      dayDiv.className = "day";
-
-      const dateSpan = document.createElement("span");
-      dateSpan.className = "date";
-      dateSpan.textContent = day;
-      dayDiv.appendChild(dateSpan);
-
-      const dayShifts = shiftData[fullDateStr] || [];
-      const hasShift = hasVisibleShiftOnDay(dayShifts) || hasAnyShiftRecordOnDay(dayShifts);
-
-      if (!hasShift && isTodayOrFuture(fullDateStr)) {
-        const addBtn = document.createElement("button");
-        addBtn.type = "button";
-        addBtn.className = "add-shift-button";
-        addBtn.textContent = "⊕";
-        addBtn.style.display = "block";
-        addBtn.style.margin = "6px auto 0";
-        addBtn.style.fontSize = "22px";
-        addBtn.style.lineHeight = "1";
-        addBtn.style.border = "none";
-        addBtn.style.background = "transparent";
-        addBtn.style.cursor = "pointer";
-        addBtn.style.color = "#1a73e8";
-
-        addBtn.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          await addShiftForDate(fullDateStr);
-        });
-
-        dayDiv.appendChild(addBtn);
+      if (editError) {
+        editError.textContent = "";
       }
-
-      dayShifts.forEach((shift) => {
-        const displayText = getShiftDisplayText(shift);
-        if (!displayText) return;
-
-        const shiftSpan = document.createElement("div");
-        shiftSpan.className = "shift-time";
-        shiftSpan.textContent = displayText;
-
-        const state = normalizeText(shift.state);
-        if (isAbsentState(state)) {
-          shiftSpan.classList.add("state-absent");
-        } else if (isMedicalSubmittedState(state)) {
-          shiftSpan.classList.add("state-medical");
-        }
-
-        shiftSpan.addEventListener("click", (e) => {
-          e.stopPropagation();
-          openDetail(fullDateStr, shift);
-        });
-
-        dayDiv.appendChild(shiftSpan);
-      });
-
-      calendarDiv.appendChild(dayDiv);
     }
-  }
 
-  // =====================
-  // 詳細表示
-  // =====================
-  function openDetail(date, shift) {
-    calendarView.style.display = "none";
-    detailView.style.display = "block";
-
-    selectedDateStr = date;
-    selectedShiftId = shift.id || "";
-    originalStart = normalizeText(shift.start);
-    originalEnd = normalizeText(shift.end);
-    originalState = normalizeText(shift.state);
-
-    detailDate.textContent = formatDateJP(date);
-    detailShift.textContent = getShiftDisplayText(shift) || "表示できる情報がありません";
-
-    editArea.style.display = "none";
-    editError.textContent = "";
-    resetMedicalArea();
-    updateDetailActionButtons(shift);
-  }
-
-  if (backButton) {
-    backButton.addEventListener("click", () => {
-      detailView.style.display = "none";
-      calendarView.style.display = "block";
-      editArea.style.display = "none";
-      editError.textContent = "";
+    if (!showMedical) {
       resetMedicalArea();
-    });
+    }
   }
 
-  // =====================
-  // プルダウン生成
-  // =====================
-  function generateTimeOptions() {
+  function generateTimeOptionsForMode(mode) {
     startSelect.innerHTML = "";
     endSelect.innerHTML = "";
 
@@ -1846,17 +1650,31 @@ window.onload = async function () {
 
     const now = new Date();
 
-    const defaultStart = document.createElement("option");
-    defaultStart.value = originalStart;
-    defaultStart.textContent = "変更なし";
-    defaultStart.selected = true;
-    startSelect.appendChild(defaultStart);
+    if (mode === "view") {
+      const defaultStart = document.createElement("option");
+      defaultStart.value = originalStart;
+      defaultStart.textContent = "変更なし";
+      defaultStart.selected = true;
+      startSelect.appendChild(defaultStart);
 
-    const defaultEnd = document.createElement("option");
-    defaultEnd.value = originalEnd;
-    defaultEnd.textContent = "変更なし";
-    defaultEnd.selected = true;
-    endSelect.appendChild(defaultEnd);
+      const defaultEnd = document.createElement("option");
+      defaultEnd.value = originalEnd;
+      defaultEnd.textContent = "変更なし";
+      defaultEnd.selected = true;
+      endSelect.appendChild(defaultEnd);
+    } else {
+      const defaultStart = document.createElement("option");
+      defaultStart.value = "";
+      defaultStart.textContent = "選択してください";
+      defaultStart.selected = true;
+      startSelect.appendChild(defaultStart);
+
+      const defaultEnd = document.createElement("option");
+      defaultEnd.value = "";
+      defaultEnd.textContent = "選択してください";
+      defaultEnd.selected = true;
+      endSelect.appendChild(defaultEnd);
+    }
 
     for (const h in startRules) {
       for (const m of startRules[h]) {
@@ -1885,8 +1703,60 @@ window.onload = async function () {
     }
   }
 
+  function openDetail(date, shift) {
+    calendarView.style.display = "none";
+    detailView.style.display = "block";
+
+    detailMode = "view";
+    selectedDateStr = date;
+    selectedShiftId = shift.id || "";
+    originalStart = normalizeText(shift.start);
+    originalEnd = normalizeText(shift.end);
+    originalState = normalizeText(shift.state);
+
+    detailDate.textContent = formatDateJP(date);
+    detailShift.textContent = getShiftDisplayText(shift) || "表示できる情報がありません";
+
+    editArea.style.display = "none";
+    editError.textContent = "";
+    resetMedicalArea();
+    updateDetailActionButtons(shift);
+  }
+
+  function openAddDetail(dateStr) {
+    calendarView.style.display = "none";
+    detailView.style.display = "block";
+
+    detailMode = "add";
+    selectedDateStr = dateStr;
+    selectedShiftId = "";
+    originalStart = "";
+    originalEnd = "";
+    originalState = "";
+
+    detailDate.textContent = formatDateJP(dateStr);
+    detailShift.textContent = "新規シフトを追加します";
+
+    if (btnEdit) btnEdit.style.display = "none";
+    if (btnDelete) btnDelete.style.display = "none";
+    if (btnMedical) btnMedical.style.display = "none";
+
+    resetMedicalArea();
+    editError.textContent = "";
+    editArea.style.display = "block";
+    generateTimeOptionsForMode("add");
+  }
+
+  if (backButton) {
+    backButton.addEventListener("click", () => {
+      detailView.style.display = "none";
+      calendarView.style.display = "block";
+      resetDetailState();
+    });
+  }
+
   // =====================
-  // 時間変更
+  // 時間変更ボタン
   // =====================
   if (btnEdit) {
     btnEdit.addEventListener("click", () => {
@@ -1902,14 +1772,113 @@ window.onload = async function () {
         return;
       }
 
+      detailMode = "view";
       editArea.style.display = "block";
       editError.textContent = "";
-      generateTimeOptions();
+      generateTimeOptionsForMode("view");
     });
   }
 
+  // =====================
+  // 保存（時間変更 / 新規追加 共通）
+  // =====================
   if (saveEdit) {
     saveEdit.addEventListener("click", async () => {
+      editError.textContent = "";
+
+      if (detailMode === "add") {
+        const start = startSelect.value;
+        const end = endSelect.value;
+
+        if (!start || !end) {
+          editError.textContent = "出勤時間と退勤時間を選択してください";
+          return;
+        }
+
+        const now = new Date();
+        const startDt = new Date(`${selectedDateStr}T${start}:00`);
+        const endDt = new Date(`${selectedDateStr}T${end}:00`);
+
+        if (startDt < now) {
+          editError.textContent = "出勤時間は過去に設定できません。公式LINEに相談してください";
+          return;
+        }
+
+        if (endDt < now) {
+          editError.textContent = "退勤時間は過去に設定できません。公式LINEに相談してください";
+          return;
+        }
+
+        if (startDt >= endDt) {
+          editError.textContent = "時間の設定が不正です。公式LINEに相談してください";
+          return;
+        }
+
+        if (!confirm("この内容でシフト追加してもよろしいですか？")) {
+          return;
+        }
+
+        try {
+          setButtonsDisabled(true);
+          resultDiv.textContent = "追加処理中…";
+
+          const profile = await liff.getProfile();
+
+          const url =
+            GAS_URL +
+            "?action=addShift" +
+            "&userId=" + encodeURIComponent(profile.userId) +
+            "&name=" + encodeURIComponent(profile.displayName) +
+            "&date=" + encodeURIComponent(selectedDateStr) +
+            "&start=" + encodeURIComponent(start) +
+            "&end=" + encodeURIComponent(end);
+
+          const data = await fetchJson(url);
+
+          if (!data.success) {
+            editError.textContent = data.message || "シフト追加に失敗しました";
+            resultDiv.textContent = "";
+            return;
+          }
+
+          const reflected = await waitForShiftRefresh(() => {
+            const dayShifts = shiftData[selectedDateStr] || [];
+
+            return dayShifts.some((shift) => {
+              return (
+                normalizeText(shift.start) === start &&
+                normalizeText(shift.end) === end
+              );
+            });
+          }, {
+            maxAttempts: 8,
+            intervalMs: 1500,
+            loadingMessage: "シフト追加の反映待ち…"
+          });
+
+          resultDiv.textContent = "";
+
+          alert(
+            reflected
+              ? (data.message || "シフト追加が完了しました")
+              : "シフト追加の処理は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
+          );
+
+          detailView.style.display = "none";
+          calendarView.style.display = "block";
+          resetDetailState();
+          generateCalendar(currentDate);
+        } catch (err) {
+          console.error(err);
+          editError.textContent = "追加中にエラーが発生しました";
+          resultDiv.textContent = "";
+        } finally {
+          setButtonsDisabled(false);
+        }
+
+        return;
+      }
+
       const start = startSelect.value;
       const end = endSelect.value;
 
@@ -1920,8 +1889,6 @@ window.onload = async function () {
       const startDt = new Date(`${selectedDateStr}T${newStart}:00`);
       const endDt = new Date(`${selectedDateStr}T${newEnd}:00`);
       const originalEndDt = new Date(`${selectedDateStr}T${originalEnd}:00`);
-
-      editError.textContent = "";
 
       const startChanged = newStart !== originalStart;
       const endChanged = newEnd !== originalEnd;
@@ -1993,6 +1960,7 @@ window.onload = async function () {
         resultDiv.textContent = "";
         detailView.style.display = "none";
         calendarView.style.display = "block";
+        resetDetailState();
       } catch (err) {
         console.error(err);
         editError.textContent = "保存中にエラーが発生しました";
@@ -2072,6 +2040,7 @@ window.onload = async function () {
         detailView.style.display = "none";
         calendarView.style.display = "block";
         resultDiv.textContent = "";
+        resetDetailState();
 
         alert(
           reflected
@@ -2307,6 +2276,7 @@ window.onload = async function () {
         resetMedicalArea();
         detailView.style.display = "none";
         calendarView.style.display = "block";
+        resetDetailState();
         setButtonsDisabled(false);
       }
     });
@@ -2348,6 +2318,131 @@ window.onload = async function () {
       generateCalendar(currentDate);
       updateWorktimeDisplay();
     });
+  }
+
+  // =====================
+  // LIFF初期化
+  // =====================
+  try {
+    await liff.init({ liffId: "2009569390-ToBfmkCN" });
+
+    resultDiv.style.color = "black";
+    resultDiv.innerHTML = "LIFF初期化成功<br>";
+
+    if (!liff.isLoggedIn()) {
+      resultDiv.innerHTML += "<br>LINEログインへ移動します…";
+      liff.login({
+        redirectUri: window.location.href
+      });
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+    resultDiv.textContent = "LIFF初期化エラー: " + err.message;
+    return;
+  }
+
+  // =====================
+  // カレンダー生成
+  // =====================
+  function generateCalendar(date) {
+    calendarDiv.innerHTML = "";
+
+    const weekHeader = document.createElement("div");
+    weekHeader.className = "week-header";
+
+    const weekList = ["日", "月", "火", "水", "木", "金", "土"];
+
+    weekList.forEach((w, index) => {
+      const cell = document.createElement("div");
+      cell.className = "week-cell";
+      cell.textContent = w;
+
+      if (index === 0) cell.style.color = "#d93025";
+      if (index === 6) cell.style.color = "#1a73e8";
+
+      weekHeader.appendChild(cell);
+    });
+
+    calendarDiv.appendChild(weekHeader);
+
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    currentMonthSpan.textContent = `${year}年 ${month + 1}月`;
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDay = firstDay.getDay();
+
+    for (let i = 0; i < startDay; i++) {
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "day";
+      calendarDiv.appendChild(emptyDiv);
+    }
+
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+      const fullDateStr =
+        `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+      const dayDiv = document.createElement("div");
+      dayDiv.className = "day";
+
+      const dateSpan = document.createElement("span");
+      dateSpan.className = "date";
+      dateSpan.textContent = day;
+      dayDiv.appendChild(dateSpan);
+
+      const dayShifts = shiftData[fullDateStr] || [];
+      const hasShift = hasVisibleShiftOnDay(dayShifts) || hasAnyShiftRecordOnDay(dayShifts);
+
+      if (!hasShift && isTodayOrFuture(fullDateStr)) {
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "add-shift-button";
+        addBtn.textContent = "⊕";
+        addBtn.style.display = "block";
+        addBtn.style.margin = "6px auto 0";
+        addBtn.style.fontSize = "22px";
+        addBtn.style.lineHeight = "1";
+        addBtn.style.border = "none";
+        addBtn.style.background = "transparent";
+        addBtn.style.cursor = "pointer";
+        addBtn.style.color = "#1a73e8";
+
+        addBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openAddDetail(fullDateStr);
+        });
+
+        dayDiv.appendChild(addBtn);
+      }
+
+      dayShifts.forEach((shift) => {
+        const displayText = getShiftDisplayText(shift);
+        if (!displayText) return;
+
+        const shiftSpan = document.createElement("div");
+        shiftSpan.className = "shift-time";
+        shiftSpan.textContent = displayText;
+
+        const state = normalizeText(shift.state);
+        if (isAbsentState(state)) {
+          shiftSpan.classList.add("state-absent");
+        } else if (isMedicalSubmittedState(state)) {
+          shiftSpan.classList.add("state-medical");
+        }
+
+        shiftSpan.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openDetail(fullDateStr, shift);
+        });
+
+        dayDiv.appendChild(shiftSpan);
+      });
+
+      calendarDiv.appendChild(dayDiv);
+    }
   }
 };
 
