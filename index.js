@@ -538,6 +538,11 @@ window.onload = async function () {
 
     const data = await fetchJson(url);
 
+    // ここ！
+    // ★ デバッグ用：Anycrossが返してきた本当のメッセージを画面に表示する
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = "<span style='color:red;'>【Anycrossの返答】" + data.anycrossRaw + "</span>";
+
     if (!data.success) {
       throw new Error(data.message || "シフト取得に失敗しました");
     }
