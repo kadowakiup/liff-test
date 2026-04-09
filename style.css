@@ -59,4 +59,13 @@
   padding: 4px;
   font-size: 12px;
   box-sizing: border-box;
+}
+
+body {
+  font-family: "Noto sans", "Hiragino", "メイリオ";
+}
+
+.title {
+  text-align: center;
+  font-size: 20px;
 }/*# sourceMappingURL=style.css.map */
