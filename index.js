@@ -46,9 +46,6 @@
 //   let currentDate = new Date();
 
 //   let fetchedName = "";
-//   let worktimePrev = "";
-//   let worktimeCurrent = "";
-//   let worktimeNext = "";
 //   let baseYear = currentDate.getFullYear();
 //   let baseMonth = currentDate.getMonth();
 
@@ -70,37 +67,52 @@
 //   // =====================
 //   // 共通関数
 //   // =====================
+//   function normalizeText(value) {
+//     return String(value || "").trim();
+//   }
+
+//   function normalizeTime(value) {
+//     const v = normalizeText(value);
+//     if (!v) return "";
+
+//     const match = v.match(/^(\d{1,2}):(\d{2})$/);
+//     if (!match) return v;
+
+//     const hour = String(Number(match[1])).padStart(2, "0");
+//     const minute = match[2];
+//     return `${hour}:${minute}`;
+//   }
+
+//   function formatDecimalHours(hours) {
+//     const num = Number(hours || 0);
+//     if (!Number.isFinite(num)) return "0";
+//     return Number.isInteger(num) ? String(num) : String(num);
+//   }
+
+//   function formatMinutesToDecimalHours(minutes) {
+//     const mins = Number(minutes || 0);
+//     if (!Number.isFinite(mins) || mins <= 0) return "0";
+
+//     const hours = mins / 60;
+//     return Number.isInteger(hours)
+//       ? String(hours)
+//       : String(Math.round(hours * 100) / 100);
+//   }
+
+//   function formatMonthTotalText(targetDate) {
+//     const totalMinutes = calcMonthlyWorkMinutes(targetDate);
+//     return `${formatMinutesToDecimalHours(totalMinutes)}時間`;
+//   }
+
 //   function updateWorktimeDisplay() {
 //     if (!workTimeSpan) return;
-
-//     const monthDiff =
-//       (currentDate.getFullYear() - baseYear) * 12 +
-//       (currentDate.getMonth() - baseMonth);
-
-//     let targetWorktime = "";
-
-//     if (monthDiff === -1) {
-//       targetWorktime = worktimePrev;
-//     } else if (monthDiff === 0) {
-//       targetWorktime = worktimeCurrent;
-//     } else if (monthDiff === 1) {
-//       targetWorktime = worktimeNext;
-//     } else {
-//       targetWorktime = "";
-//     }
-
-//     workTimeSpan.textContent =
-//       targetWorktime !== "" ? `${targetWorktime}時間` : "";
+//     workTimeSpan.textContent = formatMonthTotalText(currentDate);
 //   }
 
 //   function formatDateJP(dateStr) {
 //     const d = new Date(dateStr + "T00:00:00");
 //     const week = ["日", "月", "火", "水", "木", "金", "土"];
 //     return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日(${week[d.getDay()]})`;
-//   }
-
-//   function normalizeText(value) {
-//     return String(value || "").trim();
 //   }
 
 //   function isAbsentState(state) {
@@ -111,14 +123,23 @@
 //     return normalizeText(state) === "診断書提出済み";
 //   }
 
+//   function isDeletedOrOffState(state) {
+//     const s = normalizeText(state);
+//     return s === "休み" || s === "削除" || s === "休み / 削除";
+//   }
+
 //   function isSpecialState(state) {
-//     return isAbsentState(state) || isMedicalSubmittedState(state);
+//     return (
+//       isAbsentState(state) ||
+//       isMedicalSubmittedState(state) ||
+//       isDeletedOrOffState(state)
+//     );
 //   }
 
 //   function getShiftDisplayText(shift) {
 //     const state = normalizeText(shift?.state);
-//     const start = normalizeText(shift?.start);
-//     const end = normalizeText(shift?.end);
+//     const start = normalizeTime(shift?.start);
+//     const end = normalizeTime(shift?.end);
 
 //     if (isSpecialState(state)) {
 //       return state;
@@ -133,8 +154,8 @@
 
 //   function hasEditableShiftTime(shift) {
 //     const state = normalizeText(shift?.state);
-//     const start = normalizeText(shift?.start);
-//     const end = normalizeText(shift?.end);
+//     const start = normalizeTime(shift?.start);
+//     const end = normalizeTime(shift?.end);
 
 //     return !isSpecialState(state) && !!start && !!end;
 //   }
@@ -151,18 +172,9 @@
 //     return target >= today;
 //   }
 
-//   function isTodayOrPast(dateStr) {
-//     const target = getDateOnly(new Date(dateStr + "T00:00:00"));
-//     const today = getDateOnly(new Date());
-//     return target <= today;
-//   }
-
 //   function hasVisibleShiftOnDay(dayShifts) {
 //     if (!Array.isArray(dayShifts) || dayShifts.length === 0) return false;
-
-//     return dayShifts.some((shift) => {
-//       return !!getShiftDisplayText(shift);
-//     });
+//     return dayShifts.some((shift) => !!getShiftDisplayText(shift));
 //   }
 
 //   function hasAnyShiftRecordOnDay(dayShifts) {
@@ -341,6 +353,162 @@
 //     }
 //   }
 
+//   function minutesFromTimeString(timeStr) {
+//     const normalized = normalizeTime(timeStr);
+//     const match = normalized.match(/^(\d{2}):(\d{2})$/);
+//     if (!match) return null;
+
+//     const h = Number(match[1]);
+//     const m = Number(match[2]);
+//     return h * 60 + m;
+//   }
+
+//   function calcShiftMinutes(dateKey, shift) {
+//     const state = normalizeText(shift?.state);
+//     const startStr = normalizeTime(shift?.start);
+//     const endStr = normalizeTime(shift?.end);
+
+//     if (
+//       isAbsentState(state) ||
+//       isMedicalSubmittedState(state) ||
+//       isDeletedOrOffState(state)
+//     ) {
+//       return 0;
+//     }
+
+//     if (!startStr || !endStr) return 0;
+
+//     const startMinutes = minutesFromTimeString(startStr);
+//     const endMinutes = minutesFromTimeString(endStr);
+
+//     if (startMinutes === null || endMinutes === null) return 0;
+//     if (endMinutes <= startMinutes) return 0;
+
+//     let workedMinutes = endMinutes - startMinutes;
+
+//     // 休憩 14:00-15:00 を差し引く
+//     const breakStart = 14 * 60;
+//     const breakEnd = 15 * 60;
+
+//     const overlapStart = Math.max(startMinutes, breakStart);
+//     const overlapEnd = Math.min(endMinutes, breakEnd);
+
+//     if (overlapEnd > overlapStart) {
+//       workedMinutes -= overlapEnd - overlapStart;
+//     }
+
+//     return Math.max(0, workedMinutes);
+//   }
+
+//   function calcMonthlyWorkMinutes(targetDate) {
+//     let totalMinutes = 0;
+
+//     const year = targetDate.getFullYear();
+//     const month = targetDate.getMonth();
+
+//     for (const dateKey in shiftData) {
+//       const d = new Date(dateKey + "T00:00:00");
+//       if (d.getFullYear() !== year || d.getMonth() !== month) continue;
+
+//       const dayShifts = shiftData[dateKey] || [];
+//       dayShifts.forEach((shift) => {
+//         totalMinutes += calcShiftMinutes(dateKey, shift);
+//       });
+//     }
+
+//     return totalMinutes;
+//   }
+
+//   function getDayShifts(dateStr) {
+//     if (!Array.isArray(shiftData[dateStr])) {
+//       shiftData[dateStr] = [];
+//     }
+//     return shiftData[dateStr];
+//   }
+
+//   function findShiftById(targetShiftId) {
+//     for (const dateKey in shiftData) {
+//       const dayShifts = shiftData[dateKey] || [];
+//       const found = dayShifts.find((s) => s.id === targetShiftId);
+//       if (found) {
+//         return {
+//           date: dateKey,
+//           shift: found
+//         };
+//       }
+//     }
+//     return null;
+//   }
+
+//   function rerenderCurrentMonth() {
+//     generateCalendar(currentDate);
+//     updateWorktimeDisplay();
+//   }
+
+//   function applyLocalAddShift(dateStr, start, end, serverShiftId = "") {
+//     const dayShifts = getDayShifts(dateStr);
+
+//     const newShift = {
+//       id: serverShiftId || `local-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+//       start: normalizeTime(start),
+//       end: normalizeTime(end),
+//       state: ""
+//     };
+
+//     dayShifts.push(newShift);
+
+//     dayShifts.sort((a, b) => {
+//       const aStart = minutesFromTimeString(a.start) ?? 9999;
+//       const bStart = minutesFromTimeString(b.start) ?? 9999;
+//       return aStart - bStart;
+//     });
+
+//     return newShift;
+//   }
+
+//   function applyLocalUpdateShift(shiftId, dateStr, start, end) {
+//     const found = findShiftById(shiftId);
+//     if (!found) return null;
+
+//     found.shift.start = normalizeTime(start);
+//     found.shift.end = normalizeTime(end);
+//     found.shift.state = "";
+
+//     if (found.date !== dateStr) {
+//       const oldDayShifts = getDayShifts(found.date);
+//       const idx = oldDayShifts.findIndex((s) => s.id === shiftId);
+//       if (idx >= 0) {
+//         const moved = oldDayShifts.splice(idx, 1)[0];
+//         const newDayShifts = getDayShifts(dateStr);
+//         newDayShifts.push(moved);
+//       }
+//     }
+
+//     return found.shift;
+//   }
+
+//   function applyLocalDeleteOrAbsent(shiftId) {
+//     const found = findShiftById(shiftId);
+//     if (!found) return null;
+
+//     found.shift.state = "休み";
+//     found.shift.start = "";
+//     found.shift.end = "";
+
+//     return found.shift;
+//   }
+
+//   function applyLocalMedicalSubmitted(shiftId) {
+//     const found = findShiftById(shiftId);
+//     if (!found) return null;
+
+//     found.shift.state = "診断書提出済み";
+//     found.shift.start = "";
+//     found.shift.end = "";
+
+//     return found.shift;
+//   }
+
 //   async function reloadShifts() {
 //     const profile = await liff.getProfile();
 
@@ -358,9 +526,6 @@
 
 //     shiftData = data.shifts || {};
 //     fetchedName = data.name || "";
-//     worktimePrev = data.worktimePrev ?? "";
-//     worktimeCurrent = data.worktimeCurrent ?? "";
-//     worktimeNext = data.worktimeNext ?? "";
 
 //     baseYear = new Date().getFullYear();
 //     baseMonth = new Date().getMonth();
@@ -378,47 +543,6 @@
 //     firstMessageDiv.style.display = "none";
 //     monthNavDiv.style.display = "flex";
 //     generateCalendar(currentDate);
-//   }
-
-//   function sleep(ms) {
-//     return new Promise((resolve) => setTimeout(resolve, ms));
-//   }
-
-//   function findShiftById(targetShiftId) {
-//     for (const dateKey in shiftData) {
-//       const dayShifts = shiftData[dateKey] || [];
-//       const found = dayShifts.find((s) => s.id === targetShiftId);
-//       if (found) {
-//         return {
-//           date: dateKey,
-//           shift: found
-//         };
-//       }
-//     }
-//     return null;
-//   }
-
-//   async function waitForShiftRefresh(checkFn, options = {}) {
-//     const {
-//       maxAttempts = 8,
-//       intervalMs = 1500,
-//       loadingMessage = "反映待ち…"
-//     } = options;
-
-//     for (let i = 0; i < maxAttempts; i++) {
-//       resultDiv.textContent = `${loadingMessage} (${i + 1}/${maxAttempts})`;
-
-//       await sleep(intervalMs);
-//       await reloadShifts();
-
-//       if (checkFn()) {
-//         resultDiv.textContent = "";
-//         return true;
-//       }
-//     }
-
-//     resultDiv.textContent = "";
-//     return false;
 //   }
 
 //   function updateDetailActionButtons(shift) {
@@ -558,8 +682,8 @@
 //     detailMode = "view";
 //     selectedDateStr = date;
 //     selectedShiftId = shift.id || "";
-//     originalStart = normalizeText(shift.start);
-//     originalEnd = normalizeText(shift.end);
+//     originalStart = normalizeTime(shift.start);
+//     originalEnd = normalizeTime(shift.end);
 //     originalState = normalizeText(shift.state);
 
 //     detailDate.textContent = formatDateJP(date);
@@ -635,8 +759,8 @@
 //       editError.textContent = "";
 
 //       if (detailMode === "add") {
-//         const start = startSelect.value;
-//         const end = endSelect.value;
+//         const start = normalizeTime(startSelect.value);
+//         const end = normalizeTime(endSelect.value);
 
 //         if (!start || !end) {
 //           editError.textContent = "出勤時間と退勤時間を選択してください";
@@ -689,33 +813,15 @@
 //             return;
 //           }
 
-//           const reflected = await waitForShiftRefresh(() => {
-//             const dayShifts = shiftData[selectedDateStr] || [];
+//           applyLocalAddShift(selectedDateStr, start, end, data.shiftId || "");
+//           rerenderCurrentMonth();
 
-//             return dayShifts.some((shift) => {
-//               return (
-//                 normalizeText(shift.start) === start &&
-//                 normalizeText(shift.end) === end
-//               );
-//             });
-//           }, {
-//             maxAttempts: 8,
-//             intervalMs: 1500,
-//             loadingMessage: "シフト追加の反映待ち…"
-//           });
-
-//           resultDiv.textContent = "";
-
-//           alert(
-//             reflected
-//               ? (data.message || "シフト追加が完了しました")
-//               : "シフト追加の処理は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
-//           );
+//           alert(data.message || "シフト追加が完了しました");
 
 //           detailView.style.display = "none";
 //           calendarView.style.display = "block";
 //           resetDetailState();
-//           generateCalendar(currentDate);
+//           resultDiv.textContent = "";
 //         } catch (err) {
 //           console.error(err);
 //           editError.textContent = "追加中にエラーが発生しました";
@@ -727,8 +833,8 @@
 //         return;
 //       }
 
-//       const start = startSelect.value;
-//       const end = endSelect.value;
+//       const start = normalizeTime(startSelect.value);
+//       const end = normalizeTime(endSelect.value);
 
 //       const newStart = start === originalStart ? originalStart : start;
 //       const newEnd = end === originalEnd ? originalEnd : end;
@@ -783,27 +889,11 @@
 //           return;
 //         }
 
-//         const reflected = await waitForShiftRefresh(() => {
-//           const found = findShiftById(selectedShiftId);
-//           if (!found) return false;
-
-//           return (
-//             normalizeText(found.shift.start) === newStart &&
-//             normalizeText(found.shift.end) === newEnd
-//           );
-//         }, {
-//           maxAttempts: 8,
-//           intervalMs: 1500,
-//           loadingMessage: "時間変更の反映待ち…"
-//         });
+//         applyLocalUpdateShift(selectedShiftId, selectedDateStr, newStart, newEnd);
+//         rerenderCurrentMonth();
 
 //         editArea.style.display = "none";
-
-//         alert(
-//           reflected
-//             ? (data.message || "シフトを保存しました")
-//             : "時間変更の保存は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
-//         );
+//         alert(data.message || "シフトを保存しました");
 
 //         resultDiv.textContent = "";
 //         detailView.style.display = "none";
@@ -869,32 +959,15 @@
 //           return;
 //         }
 
-//         const reflected = await waitForShiftRefresh(() => {
-//           const found = findShiftById(selectedShiftId);
-
-//           if (!found) return true;
-
-//           const state = normalizeText(found.shift.state);
-//           const startEmpty = !normalizeText(found.shift.start);
-//           const endEmpty = !normalizeText(found.shift.end);
-
-//           return isAbsentState(state) || (startEmpty && endEmpty);
-//         }, {
-//           maxAttempts: 8,
-//           intervalMs: 1500,
-//           loadingMessage: "休み / 削除の反映待ち…"
-//         });
+//         applyLocalDeleteOrAbsent(selectedShiftId);
+//         rerenderCurrentMonth();
 
 //         detailView.style.display = "none";
 //         calendarView.style.display = "block";
 //         resultDiv.textContent = "";
 //         resetDetailState();
 
-//         alert(
-//           reflected
-//             ? (data.message || "処理が完了しました")
-//             : "休み / 削除の処理は完了しました。画面反映に時間がかかっているため、更新ボタンで再確認してください。"
-//         );
+//         alert(data.message || "処理が完了しました");
 //       } catch (err) {
 //         console.error(err);
 //         resultDiv.textContent = "";
@@ -1041,10 +1114,6 @@
 //       setButtonsDisabled(true);
 //       resultDiv.textContent = "提出中…";
 
-//       let submitSucceeded = false;
-//       let submitMessage =
-//         "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。";
-
 //       try {
 //         const profile = await liff.getProfile();
 
@@ -1072,53 +1141,19 @@
 //           return;
 //         }
 
-//         submitSucceeded = true;
-//         submitMessage = data.message || submitMessage;
+//         applyLocalMedicalSubmitted(selectedShiftId);
+//         rerenderCurrentMonth();
+
+//         alert(
+//           data.message ||
+//             "診断書の提出が完了しました。月末に確認をしているため、不正があった場合は当日欠勤に戻る可能性があります。"
+//         );
 //       } catch (err) {
 //         console.error("submitMedical送信エラー:", err);
 //         resultDiv.textContent = "";
 //         medicalError.textContent =
 //           "診断書の提出に失敗しました: " + (err.message || err);
 //         return;
-//       }
-
-//       try {
-//         resultDiv.textContent = "診断書提出後の反映待ち…";
-
-//         const reflected = await waitForShiftRefresh(() => {
-//           const found = findShiftById(selectedShiftId);
-
-//           if (!found) return true;
-
-//           const state = normalizeText(found.shift.state);
-//           const startEmpty = !normalizeText(found.shift.start);
-//           const endEmpty = !normalizeText(found.shift.end);
-
-//           return isMedicalSubmittedState(state) || (startEmpty && endEmpty);
-//         }, {
-//           maxAttempts: 8,
-//           intervalMs: 1500,
-//           loadingMessage: "診断書提出後の反映待ち…"
-//         });
-
-//         alert(
-//           reflected
-//             ? submitMessage
-//             : "診断書の提出は完了しました。Lark側の反映に時間がかかっているため、更新ボタンで再確認してください。"
-//         );
-//       } catch (err) {
-//         console.error("submitMedical反映待ちエラー:", err);
-
-//         if (submitSucceeded) {
-//           alert(
-//             "診断書の提出は完了しました。画面反映の確認中にエラーが発生したため、更新ボタンで再確認してください。"
-//           );
-//         } else {
-//           medicalError.textContent =
-//             "診断書の提出後処理でエラーが発生しました: " + (err.message || err);
-//           resultDiv.textContent = "";
-//           return;
-//         }
 //       } finally {
 //         resultDiv.textContent = "";
 //         resetMedicalArea();
@@ -1295,70 +1330,6 @@
 // };
 
 
-
-
-
-
-
-
-
-
-// function calcShiftMinutes(dateKey, shift) {
-//   const state = String(shift?.state || "").trim();
-//   const startStr = String(shift?.start || "").trim();
-//   const endStr = String(shift?.end || "").trim();
-
-//   // 特殊状態は0分
-//   if (state === "当欠" || state === "診断書提出済み") return 0;
-//   if (!startStr || !endStr) return 0;
-
-//   const start = new Date(`${dateKey}T${startStr}:00`);
-//   const end = new Date(`${dateKey}T${endStr}:00`);
-
-//   if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
-//     return 0;
-//   }
-
-//   // まず勤務全体の分数
-//   let workedMinutes = Math.floor((end - start) / 1000 / 60);
-
-//   // 同日の休憩時間 14:00-15:00
-//   const breakStart = new Date(`${dateKey}T14:00:00`);
-//   const breakEnd = new Date(`${dateKey}T15:00:00`);
-
-//   // 勤務時間と休憩時間の重なりを計算
-//   const overlapStart = Math.max(start.getTime(), breakStart.getTime());
-//   const overlapEnd = Math.min(end.getTime(), breakEnd.getTime());
-
-//   if (overlapEnd > overlapStart) {
-//     const breakMinutes = Math.floor((overlapEnd - overlapStart) / 1000 / 60);
-//     workedMinutes -= breakMinutes;
-//   }
-
-//   return Math.max(0, workedMinutes);
-// }
-
-// function calcMonthlyWorkTime(targetDate) {
-//   let totalMinutes = 0;
-
-//   const year = targetDate.getFullYear();
-//   const month = targetDate.getMonth();
-
-//   for (const dateKey in shiftData) {
-//     const d = new Date(dateKey + "T00:00:00");
-//     if (d.getFullYear() !== year || d.getMonth() !== month) continue;
-
-//     const dayShifts = shiftData[dateKey] || [];
-//     dayShifts.forEach((shift) => {
-//       totalMinutes += calcShiftMinutes(dateKey, shift);
-//     });
-//   }
-
-//   const hours = Math.floor(totalMinutes / 60);
-//   const minutes = totalMinutes % 60;
-
-//   return `${hours}時間${minutes}分`;
-// }
 
 
 
@@ -1861,15 +1832,38 @@ window.onload = async function () {
     return found.shift;
   }
 
-  function applyLocalDeleteOrAbsent(shiftId) {
+  // ===== ★ 休む日の前日23時判定関数 =====
+  function determineDeleteOrAbsent(dateStr) {
+    const targetDate = new Date(dateStr + "T00:00:00");
+    const deadline = new Date(targetDate.getTime());
+    deadline.setDate(deadline.getDate() - 1); // 前日
+    deadline.setHours(23, 0, 0, 0);           // 23:00
+
+    const now = new Date();
+    // 現在時刻が前日23時以前なら「空白（削除）」、過ぎていれば「当欠」
+    return now <= deadline ? "deleted" : "当欠";
+  }
+
+  // ===== ★ カレンダーの表記を更新する処理 =====
+  function applyLocalDeleteOrAbsent(shiftId, actionType) {
     const found = findShiftById(shiftId);
     if (!found) return null;
 
-    found.shift.state = "休み";
-    found.shift.start = "";
-    found.shift.end = "";
-
-    return found.shift;
+    if (actionType === "deleted") {
+      // 削除（空白）にする：配列から消去
+      const dayShifts = getDayShifts(found.date);
+      const idx = dayShifts.findIndex((s) => s.id === shiftId);
+      if (idx >= 0) {
+        dayShifts.splice(idx, 1);
+      }
+      return null;
+    } else {
+      // 当欠にする
+      found.shift.state = "当欠";
+      found.shift.start = "";
+      found.shift.end = "";
+      return found.shift;
+    }
   }
 
   function applyLocalMedicalSubmitted(shiftId) {
@@ -2298,11 +2292,12 @@ window.onload = async function () {
         return;
       }
 
-      const msg =
-        `下記シフトについて、休み / 削除申請を行います。\n\n` +
-        `${formatDateJP(selectedDateStr)}\n` +
-        `${originalStart}-${originalEnd}\n\n` +
-        `よろしいですか？`;
+      // ★ 23時判定とメッセージの分岐
+      const actionType = determineDeleteOrAbsent(selectedDateStr);
+
+      const msg = actionType === "deleted"
+        ? `下記シフトを削除（空白）にします。\n\n${formatDateJP(selectedDateStr)}\n${originalStart}-${originalEnd}\n\nよろしいですか？`
+        : `前日23時を過ぎているため、下記シフトは「当欠」となります。\n\n${formatDateJP(selectedDateStr)}\n${originalStart}-${originalEnd}\n\nよろしいですか？`;
 
       if (!confirm(msg)) {
         return;
@@ -2323,7 +2318,8 @@ window.onload = async function () {
           "&shiftId=" + encodeURIComponent(selectedShiftId) +
           "&date=" + encodeURIComponent(selectedDateStr) +
           "&start=" + encodeURIComponent(originalStart) +
-          "&end=" + encodeURIComponent(originalEnd);
+          "&end=" + encodeURIComponent(originalEnd) +
+          "&actionType=" + encodeURIComponent(actionType); // GAS/Anycross側にも判定結果を送付
 
         const data = await fetchJson(url);
 
@@ -2333,7 +2329,8 @@ window.onload = async function () {
           return;
         }
 
-        applyLocalDeleteOrAbsent(selectedShiftId);
+        // ★ カレンダー上のステータスを書き換え
+        applyLocalDeleteOrAbsent(selectedShiftId, actionType);
         rerenderCurrentMonth();
 
         detailView.style.display = "none";
