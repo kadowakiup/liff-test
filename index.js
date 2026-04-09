@@ -1,4 +1,4 @@
-// // // // // 完璧
+// // // // // // 完璧
 // window.onload = async function () {
 //   const calendarDiv = document.getElementById("calendar");
 //   const currentMonthSpan = document.getElementById("currentMonth");
@@ -487,15 +487,38 @@
 //     return found.shift;
 //   }
 
-//   function applyLocalDeleteOrAbsent(shiftId) {
+//   // ===== ★ 休む日の前日23時判定関数 =====
+//   function determineDeleteOrAbsent(dateStr) {
+//     const targetDate = new Date(dateStr + "T00:00:00");
+//     const deadline = new Date(targetDate.getTime());
+//     deadline.setDate(deadline.getDate() - 1); // 前日
+//     deadline.setHours(23, 0, 0, 0);           // 23:00
+
+//     const now = new Date();
+//     // 現在時刻が前日23時以前なら「空白（削除）」、過ぎていれば「当欠」
+//     return now <= deadline ? "deleted" : "当欠";
+//   }
+
+//   // ===== ★ カレンダーの表記を更新する処理 =====
+//   function applyLocalDeleteOrAbsent(shiftId, actionType) {
 //     const found = findShiftById(shiftId);
 //     if (!found) return null;
 
-//     found.shift.state = "休み";
-//     found.shift.start = "";
-//     found.shift.end = "";
-
-//     return found.shift;
+//     if (actionType === "deleted") {
+//       // 削除（空白）にする：配列から消去
+//       const dayShifts = getDayShifts(found.date);
+//       const idx = dayShifts.findIndex((s) => s.id === shiftId);
+//       if (idx >= 0) {
+//         dayShifts.splice(idx, 1);
+//       }
+//       return null;
+//     } else {
+//       // 当欠にする
+//       found.shift.state = "当欠";
+//       found.shift.start = "";
+//       found.shift.end = "";
+//       return found.shift;
+//     }
 //   }
 
 //   function applyLocalMedicalSubmitted(shiftId) {
@@ -924,11 +947,12 @@
 //         return;
 //       }
 
-//       const msg =
-//         `下記シフトについて、休み / 削除申請を行います。\n\n` +
-//         `${formatDateJP(selectedDateStr)}\n` +
-//         `${originalStart}-${originalEnd}\n\n` +
-//         `よろしいですか？`;
+//       // ★ 23時判定とメッセージの分岐
+//       const actionType = determineDeleteOrAbsent(selectedDateStr);
+
+//       const msg = actionType === "deleted"
+//         ? `下記シフトを削除（空白）にします。\n\n${formatDateJP(selectedDateStr)}\n${originalStart}-${originalEnd}\n\nよろしいですか？`
+//         : `前日23時を過ぎているため、下記シフトは「当欠」となります。\n\n${formatDateJP(selectedDateStr)}\n${originalStart}-${originalEnd}\n\nよろしいですか？`;
 
 //       if (!confirm(msg)) {
 //         return;
@@ -949,7 +973,8 @@
 //           "&shiftId=" + encodeURIComponent(selectedShiftId) +
 //           "&date=" + encodeURIComponent(selectedDateStr) +
 //           "&start=" + encodeURIComponent(originalStart) +
-//           "&end=" + encodeURIComponent(originalEnd);
+//           "&end=" + encodeURIComponent(originalEnd) +
+//           "&actionType=" + encodeURIComponent(actionType); // GAS/Anycross側にも判定結果を送付
 
 //         const data = await fetchJson(url);
 
@@ -959,7 +984,8 @@
 //           return;
 //         }
 
-//         applyLocalDeleteOrAbsent(selectedShiftId);
+//         // ★ カレンダー上のステータスを書き換え
+//         applyLocalDeleteOrAbsent(selectedShiftId, actionType);
 //         rerenderCurrentMonth();
 
 //         detailView.style.display = "none";
@@ -1328,8 +1354,6 @@
 //     }
 //   }
 // };
-
-
 
 
 
@@ -2575,21 +2599,34 @@ window.onload = async function () {
   }
 
   // =====================
-  // LIFF初期化
+  // LIFF初期化と自動取得（★ここを変更しました）
   // =====================
   try {
     await liff.init({ liffId: "2009569390-ToBfmkCN" });
 
     resultDiv.style.color = "black";
-    resultDiv.innerHTML = "LIFF初期化成功<br>";
 
     if (!liff.isLoggedIn()) {
-      resultDiv.innerHTML += "<br>LINEログインへ移動します…";
+      resultDiv.innerHTML = "LINEログインへ移動します…";
       liff.login({
         redirectUri: window.location.href
       });
       return;
     }
+
+    // ★ログイン済みの場合は自動で「更新」処理を走らせる
+    try {
+      setButtonsDisabled(true);
+      resultDiv.textContent = "更新中..."; // 取得中の表示
+      await reloadShifts();
+      resultDiv.textContent = "";
+    } catch (err) {
+      console.error(err);
+      resultDiv.textContent = "取得エラー: " + err.message;
+    } finally {
+      setButtonsDisabled(false);
+    }
+
   } catch (err) {
     console.error(err);
     resultDiv.textContent = "LIFF初期化エラー: " + err.message;
@@ -2699,7 +2736,3 @@ window.onload = async function () {
     }
   }
 };
-
-
-
-
