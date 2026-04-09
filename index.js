@@ -44,8 +44,6 @@ window.onload = async function () {
   let currentDate = new Date();
 
   let fetchedName = "";
-  let baseYear = currentDate.getFullYear();
-  let baseMonth = currentDate.getMonth();
 
   // 選択中シフト情報
   let selectedShiftId = "";
@@ -546,9 +544,6 @@ window.onload = async function () {
 
     shiftData = data.shifts || {};
     fetchedName = data.name || "";
-
-    baseYear = new Date().getFullYear();
-    baseMonth = new Date().getMonth();
 
     if (userNameSpan) {
       userNameSpan.textContent = fetchedName;
