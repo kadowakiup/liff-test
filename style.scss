@@ -68,8 +68,15 @@
 // 自分のスタイル
 body {
   font-family: 'Noto sans', 'Hiragino', 'メイリオ';
+  max-width: 600px;
+  margin: 0 auto;
+  .title {
+    text-align: center;
+    font-size: 20px;
+  }
+  #result {
+    text-align: center;
+    padding-top: 20px;
+  }
 }
-.title {
-  text-align: center;
-  font-size: 20px;
-}
+
