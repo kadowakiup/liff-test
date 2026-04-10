@@ -527,29 +527,62 @@ window.onload = async function () {
     return found.shift;
   }
 
-  async function reloadShifts() {
-    const profile = await liff.getProfile();
-    const idToken = liff.getIDToken(); // ★ トークン取得
+  // ここ！
+  // async function reloadShifts() {
+  //   const profile = await liff.getProfile();
+  //   const idToken = liff.getIDToken(); // ★ トークン取得
 
-    const url =
-      GAS_URL +
+  //   const url =
+  //     GAS_URL +
+  //     "?action=fetch" +
+  //     "&userId=" + encodeURIComponent(profile.userId) +
+  //     "&name=" + encodeURIComponent(profile.displayName) +
+  //     "&idToken=" + encodeURIComponent(idToken) + // ★ 送信
+  //     "&t=" + Date.now();
+
+  //   const data = await fetchJson(url);
+
+  //   if (!data.success) {
+  //     // ★ 期限切れなら一度だけ自動再ログイン
+  //     if (data.message && (data.message.includes("セッション切れ") || data.message.includes("expired") || data.message.includes("認証エラー"))) {
+  //       alert("セキュリティセッションの期限が切れました。再ログインします。");
+  //       liff.login();
+  //       return;
+  //     }
+  //     throw new Error(data.message || "シフト取得に失敗しました");
+  //   }
+async function reloadShifts() {
+  const profile = await liff.getProfile();
+  const idToken = liff.getIDToken(); 
+
+  // ★ 追加：トークンが取れていないなら、GASを叩かずに再ログインへ
+  if (!idToken) {
+    console.warn("ID Token is null. Redirecting to login...");
+    liff.login({ redirectUri: window.location.href });
+    return;
+  }
+
+  const url = GAS_URL +
       "?action=fetch" +
       "&userId=" + encodeURIComponent(profile.userId) +
       "&name=" + encodeURIComponent(profile.displayName) +
-      "&idToken=" + encodeURIComponent(idToken) + // ★ 送信
+      "&idToken=" + encodeURIComponent(idToken) +
       "&t=" + Date.now();
 
-    const data = await fetchJson(url);
+  const data = await fetchJson(url);
 
-    if (!data.success) {
-      // ★ 期限切れなら一度だけ自動再ログイン
-      if (data.message && (data.message.includes("セッション切れ") || data.message.includes("expired") || data.message.includes("認証エラー"))) {
-        alert("セキュリティセッションの期限が切れました。再ログインします。");
-        liff.login();
-        return;
-      }
-      throw new Error(data.message || "シフト取得に失敗しました");
+  if (!data.success) {
+    // ★ 修正：何度もアラートが出ないよう、consoleに出力して止めるか、
+    // 明示的にユーザー操作（ボタン等）でログインさせるのが安全です
+    if (data.message && (data.message.includes("セッション切れ") || data.message.includes("認証エラー"))) {
+      console.error("GAS Auth Error:", data.message);
+      // 自動ログインを繰り返すと無限ループするので、一旦止める
+      alert("セッションが切れました。ページを再読み込みするか、再度ログインしてください。");
+      liff.login({ redirectUri: window.location.href });
+      return;
     }
+    throw new Error(data.message || "シフト取得に失敗しました");
+  }
 
     shiftData = data.shifts || {};
     fetchedName = data.name || "";
@@ -1218,34 +1251,49 @@ window.onload = async function () {
     });
   }
 
+  // ここ！
   // =====================
   // LIFF初期化と自動取得
   // =====================
-  try {
-    await liff.init({ liffId: "2009569390-ToBfmkCN" });
+  // try {
+  //   await liff.init({ liffId: "2009569390-ToBfmkCN" });
 
-    resultDiv.style.color = "black";
+  //   resultDiv.style.color = "black";
 
-    if (!liff.isLoggedIn()) {
-      resultDiv.innerHTML = "LINEログインへ移動します…";
-      liff.login({
-        redirectUri: window.location.href
-      });
-      return;
-    }
+  //   if (!liff.isLoggedIn()) {
+  //     resultDiv.innerHTML = "LINEログインへ移動します…";
+  //     liff.login({
+  //       redirectUri: window.location.href
+  //     });
+  //     return;
+  //   }
 
-    // ★ログイン済みの場合は自動で「更新」処理を走らせる
-    try {
-      setButtonsDisabled(true);
-      resultDiv.textContent = "更新中..."; // 取得中の表示
-      await reloadShifts();
-      resultDiv.textContent = "";
-    } catch (err) {
-      console.error(err);
-      resultDiv.textContent = "取得エラー: " + err.message;
-    } finally {
-      setButtonsDisabled(false);
-    }
+  //   // ★ログイン済みの場合は自動で「更新」処理を走らせる
+  //   try {
+  //     setButtonsDisabled(true);
+  //     resultDiv.textContent = "更新中..."; // 取得中の表示
+  //     await reloadShifts();
+  //     resultDiv.textContent = "";
+  //   } catch (err) {
+  //     console.error(err);
+  //     resultDiv.textContent = "取得エラー: " + err.message;
+  //   } finally {
+  //     setButtonsDisabled(false);
+  //   }
+try {
+  await liff.init({ liffId: "2009569390-ToBfmkCN" });
+
+  if (!liff.isLoggedIn()) {
+    resultDiv.innerHTML = "LINEログインへ移動します…";
+    liff.login({ redirectUri: window.location.href }); // ★確実に今のURLに戻るように指定
+    return;
+  }
+  
+  // ログイン済みでも、外部ブラウザの場合はトークンチェック
+  if (!liff.getIDToken()) {
+    liff.login({ redirectUri: window.location.href });
+    return;
+  }
 
   } catch (err) {
     console.error(err);
