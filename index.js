@@ -1492,7 +1492,7 @@ window.onload = async function () {
 
   // シフト情報取得
   async function reloadShifts() {
-    const idToken = liff.getIDToken(); // ここで身分証を取得
+    const idToken = liff.getIDToken();
     
     const url = GAS_URL + 
                 "?action=fetch" + 
@@ -1500,11 +1500,15 @@ window.onload = async function () {
                 "&t=" + Date.now();
     
     const data = await fetchJson(url);
-    console.log("GAS返却データ:", data);
 
     if (!data.success) {
-      // もしGASがエラーを返したら、その理由（data.message）を画面に出す
-      throw new Error(data.message || "理由不明の取得失敗");
+      // ★ ここがポイント：もし認証エラー（期限切れなど）が返ってきたら自動でログインし直す
+      if (data.message.includes("認証失敗") || data.message.includes("expired")) {
+        console.log("トークン切れのため再ログインします...");
+        liff.login(); // ログイン画面へ飛ばす（一瞬で戻ってきます）
+        return;
+      }
+      throw new Error(data.message || "取得失敗");
     }
 
     shiftData = data.shifts || {};
