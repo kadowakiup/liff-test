@@ -73,7 +73,7 @@ body {
     "Noto Sans",
     sans-serif;
   width: 100vw;
-  height: 100vw;
+  height: 100vh;
   #calendarView {
     max-width: 600px;
     margin: 0 auto;
@@ -81,6 +81,8 @@ body {
       text-align: center;
       padding-top: 18px;
       color: #01b6ff;
+      font-weight: 900;
+      line-height: 100vh;
     } 
   }
 }

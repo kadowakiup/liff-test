@@ -64,7 +64,7 @@
 body {
   font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans", sans-serif;
   width: 100vw;
-  height: 100vw;
+  height: 100vh;
 }
 body #calendarView {
   max-width: 600px;
@@ -74,4 +74,6 @@ body #calendarView #result {
   text-align: center;
   padding-top: 18px;
   color: #01b6ff;
+  font-weight: 900;
+  line-height: 100vh;
 }/*# sourceMappingURL=style.css.map */
