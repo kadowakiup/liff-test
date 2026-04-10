@@ -1224,7 +1224,7 @@ window.onload = async function () {
   try {
     await liff.init({ liffId: "2009569390-ToBfmkCN" });
 
-    resultDiv.style.color = "black";
+    // resultDiv.style.color = "black";
 
     if (!liff.isLoggedIn()) {
       resultDiv.innerHTML = "LINEログインへ移動します…";
