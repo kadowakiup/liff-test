@@ -46,7 +46,7 @@ body #calendarView #monthNav {
 }
 body #calendarView #monthNav #currentMonth {
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 600;
 }
 body #calendarView #monthNav #prevMonth, body #calendarView #monthNav #nextMonth {
   background-color: #fff;
@@ -102,10 +102,12 @@ body #calendarView #calendar .day .shift-time {
   background-color: #ededed;
 }
 body #calendarView #calendar .day .shift-time.state-medical {
+  font-weight: 600;
   color: #00b894;
   background-color: #f0fff4;
 }
 body #calendarView #calendar .day .shift-time.state-absent {
+  font-weight: 600;
   color: #ff4d8d;
   background-color: #fff0f5;
 }/*# sourceMappingURL=style.css.map */
