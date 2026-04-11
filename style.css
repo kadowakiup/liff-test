@@ -104,4 +104,8 @@ body #calendarView #calendar .day .shift-time {
 body #calendarView #calendar .day .shift-time.state-medical {
   color: #00b894;
   background-color: #f0fff4;
+}
+body #calendarView #calendar .day .shift-time.state-absent {
+  color: #ff4d8d;
+  background-color: #fff0f5;
 }/*# sourceMappingURL=style.css.map */

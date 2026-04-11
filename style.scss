@@ -101,6 +101,10 @@ body {
             color: #00b894;
             background-color: #f0fff4;
           }
+          &.state-absent {
+            color: #ff4d8d;
+            background-color: #fff0f5;
+          }
         }
       }
     }
