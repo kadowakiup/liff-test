@@ -1,3 +1,4 @@
+@charset "UTF-8";
 .container {
   width: 90%;
   margin: 0 auto;
@@ -41,7 +42,7 @@ body #calendarView #monthNav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 10px 0 20px 0;
+  margin: 10px auto 20px auto;
 }
 body #calendarView #monthNav #currentMonth {
   font-size: 18px;
@@ -77,6 +78,7 @@ body #calendarView #calendar .week-header {
   gap: 1px;
 }
 body #calendarView #calendar .week-header .week-cell {
+  font-size: 14px;
   padding: 4px 0;
 }
 body #calendarView #calendar .day {
@@ -85,4 +87,17 @@ body #calendarView #calendar .day {
   padding: 4px;
   font-size: 12px;
   box-sizing: border-box;
+  min-width: 0;
+}
+body #calendarView #calendar .day .date {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+body #calendarView #calendar .day .shift-time {
+  white-space: nowrap; /* 改行させない */
+  overflow: hidden; /* はみ出た分を隠す */
+  padding: 2px;
+  border-radius: 2px;
+  background-color: #d3d3d3;
 }/*# sourceMappingURL=style.css.map */
