@@ -175,6 +175,7 @@ body {
       display: flex;
       gap: 15px;
       justify-content: flex-start;
+      margin-bottom: 20px;
       > button {
         color: #01b6ff;
         width: 100px;
@@ -184,6 +185,14 @@ body {
         justify-content: center;
         font-weight: 600;
         font-size: 13px;
+      }
+    }
+    #editArea {
+      grid-template-columns: 50px 1fr;
+      font-size: 13px;
+      #saveEdit {
+        grid-row: 3 / 4;
+	      grid-column: 1 / 3;
       }
     }
   }

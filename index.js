@@ -743,7 +743,7 @@ window.onload = async function () {
 
     resetMedicalArea();
     editError.textContent = "";
-    editArea.style.display = "block";
+    editArea.style.display = "grid";
     generateTimeOptionsForMode("add");
   }
 
@@ -773,7 +773,7 @@ window.onload = async function () {
       }
 
       detailMode = "view";
-      editArea.style.display = "block";
+      editArea.style.display = "grid";
       editError.textContent = "";
       generateTimeOptionsForMode("view");
     });
