@@ -157,14 +157,14 @@ body #detailView #detailDate {
 body #detailView #detailShift {
   margin: 0 0 20px 0;
 }
-body #detailView_menu {
+body #detailView .detailView_menu {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 20px;
   align-items: center;
 }
-body #detailView_menu > button {
+body #detailView .detailView_menu > button {
   color: #01b6ff;
   display: inline-flex;
   width: 160px;
