@@ -189,14 +189,20 @@ body {
     }
     #editArea {
       grid-template-columns: 50px 140px;
+      grid-template-rows: 38px 38px 1fr;
       font-size: 13px;
       padding-top: 30px;
       justify-content: center;
+      gap: 12px 0;
+      > p {
+        color: #616161;
+      }
       > select {
         border: 1px solid #c7c7c7;
         border-radius: 6px;
         padding: 4px;
         width: 140px;
+        color: #333;
       }
       #saveEdit {
         grid-row: 3 / 4;
@@ -205,6 +211,7 @@ body {
         background-color: #01b6ff;
         color: #fff;
         border-radius: 4px;
+        margin-top: 6px;
       }
     }
   }
