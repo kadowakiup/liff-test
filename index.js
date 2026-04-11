@@ -97,7 +97,7 @@ window.onload = async function () {
 
   function formatMonthTotalText(targetDate) {
     const totalMinutes = calcMonthlyWorkMinutes(targetDate);
-    return `${formatMinutesToDecimalHours(totalMinutes)}時間`;
+    return `${formatMinutesToDecimalHours(totalMinutes)} h`;
   }
 
   function updateWorktimeDisplay() {

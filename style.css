@@ -47,6 +47,7 @@ body #calendarView #monthNav {
 body #calendarView #monthNav #currentMonth {
   font-size: 18px;
   font-weight: 600;
+  color: #616161;
 }
 body #calendarView #monthNav #prevMonth, body #calendarView #monthNav #nextMonth {
   background-color: #fff;
@@ -110,4 +111,5 @@ body #calendarView #calendar .day .shift-time.state-absent {
   font-weight: 600;
   color: #ff4d8d;
   background-color: #fff0f5;
+  text-align: center;
 }/*# sourceMappingURL=style.css.map */
