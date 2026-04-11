@@ -77,7 +77,7 @@ body #calendarView #summary #userName, body #calendarView #summary #workTime {
   justify-content: center;
 }
 body #calendarView #summary #userName {
-  font-weight: 500;
+  font-weight: 700;
   font-size: 20px;
   margin-bottom: 8px;
 }
