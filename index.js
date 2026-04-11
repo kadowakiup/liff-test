@@ -108,7 +108,7 @@ window.onload = async function () {
   function formatDateJP(dateStr) {
     const d = new Date(dateStr + "T00:00:00");
     const week = ["日", "月", "火", "水", "木", "金", "土"];
-    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日(${week[d.getDay()]})`;
+    return `${d.getFullYear()}年 ${d.getMonth() + 1}月 ${d.getDate()}日(${week[d.getDay()]})`;
   }
 
   function isAbsentState(state) {
