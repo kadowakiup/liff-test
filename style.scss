@@ -171,6 +171,7 @@ body {
       font-weight: 600;
       font-size: 24px;
     }
+    // メニュー
     .detailView_menu {
       display: flex;
       gap: 15px;
@@ -187,6 +188,7 @@ body {
         font-size: 13px;
       }
     }
+    // 時間変更
     #editArea {
       grid-template-columns: 50px 140px;
       grid-template-rows: 38px 38px 1fr;
@@ -213,6 +215,10 @@ body {
         border-radius: 4px;
         margin-top: 6px;
       }
+    }
+    // 診断書提出
+    #medicalArea {
+
     }
   }
 }
