@@ -219,4 +219,6 @@ body #detailView #medicalArea #submitMedical {
   background-color: #01b6ff;
   width: 100%;
   color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
 }/*# sourceMappingURL=style.css.map */
