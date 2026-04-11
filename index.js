@@ -772,6 +772,8 @@ window.onload = async function () {
         return;
       }
 
+      resetMedicalArea();
+
       detailMode = "view";
       editArea.style.display = "grid";
       editError.textContent = "";
@@ -961,7 +963,7 @@ window.onload = async function () {
 
       const msg = actionType === "deleted"
         ? `下記シフトを削除（空白）にします。\n\n${formatDateJP(selectedDateStr)}\n${originalStart}-${originalEnd}\n\nよろしいですか？`
-        : `前日23時を過ぎているため、下記シフトは「当欠」となります。\n\n${formatDateJP(selectedDateStr)}\n${originalStart}-${originalEnd}\n\nよろしいですか？`;
+        : `前日23時以降の申請のため、「当欠」となります。\n\n${formatDateJP(selectedDateStr)}\n${originalStart}-${originalEnd}\n\nよろしいですか？`;
 
       if (!confirm(msg)) {
         return;
@@ -1040,6 +1042,11 @@ window.onload = async function () {
       }
 
       if (!medicalArea) return;
+
+      if (editArea) {
+        editArea.style.display = "none";
+        editError.textContent = "";
+      }
 
       const isOpen = medicalArea.style.display === "block";
       medicalArea.style.display = isOpen ? "none" : "block";
