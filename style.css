@@ -113,7 +113,7 @@ body #calendarView #calendar .day .shift-time.state-absent {
   background-color: #fff0f5;
   text-align: center;
 }
-body #calendarView #calendar .day .shift-time .add-shift-button {
+body #calendarView #calendar .day .add-shift-button {
   margin: 0 auto;
   font-size: 22px;
   line-height: 1;
