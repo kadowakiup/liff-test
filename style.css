@@ -1,13 +1,4 @@
 @charset "UTF-8";
-/* style.scss */
-/* カレンダー全体 */
-#calendar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-  margin-top: 20px;
-}
-
 /* 日付セル */
 .day {
   border: 1px solid #ccc;
@@ -97,7 +88,7 @@ body #calendarView #monthNav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 10px 0 20px 0;
 }
 body #calendarView #monthNav #currentMonth {
   font-size: 18px;
@@ -117,4 +108,12 @@ body #calendarView #monthNav #prevMonth > img, body #calendarView #monthNav #nex
      object-fit: contain;
   -o-object-position: center;
      object-position: center;
+}
+body #calendarView #calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+body #calendarView #calendar .day {
+  outline: solid 1px #d3d3d3;
 }/*# sourceMappingURL=style.css.map */
