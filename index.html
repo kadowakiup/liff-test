@@ -6,9 +6,10 @@
     <title>シフト管理</title>
 
     <!-- Noto sans -->
+    <!-- Robot -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="reset.css">
     <link rel="stylesheet" href="style.css?v=24">
@@ -37,6 +38,7 @@
     </div>
 
     <div id="detailView" style="display:none;">
+      <button id="backButton">戻る</button>
       <h3 id="detailDate"></h3>
       <p id="detailShift"></p>
 
@@ -56,8 +58,6 @@
         <button id="submitMedical" style="margin-top:12px;">提出する</button>
       </div>
 
-      <br><br>
-
       <div id="editArea" style="display:none;">
         <p>出勤</p>
         <select id="startTime"></select>
@@ -70,9 +70,6 @@
 
         <p id="editError" style="color:red;"></p>
       </div>
-
-      <br>
-      <button id="backButton">戻る</button>
     </div>
 
   </body>
