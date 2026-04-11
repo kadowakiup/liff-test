@@ -1335,15 +1335,8 @@ try {
         const addBtn = document.createElement("button");
         addBtn.type = "button";
         addBtn.className = "add-shift-button";
-        addBtn.textContent = "⊕";
+        addBtn.textContent = "+";
         addBtn.style.display = "block";
-        addBtn.style.margin = "6px auto 0";
-        addBtn.style.fontSize = "22px";
-        addBtn.style.lineHeight = "1";
-        addBtn.style.border = "none";
-        addBtn.style.background = "transparent";
-        addBtn.style.cursor = "pointer";
-        addBtn.style.color = "#1a73e8";
 
         addBtn.addEventListener("click", (e) => {
           e.stopPropagation();
