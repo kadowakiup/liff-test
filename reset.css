@@ -77,6 +77,8 @@ button, input, optgroup, select, textarea {
   font-size: 100%;
   line-height: 1.15;
   margin: 0;
+  background: none;
+  border: none;
 }
 
 button, input {

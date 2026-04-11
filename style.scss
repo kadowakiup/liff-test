@@ -101,10 +101,11 @@ body {
         .shift-time {
           white-space: nowrap;     /* 改行させない */
           overflow: hidden;        /* はみ出た分を隠す */
-          padding: 2px;
+          padding: 3px;
           border-radius: 3px;
           background-color: #ededed;
           font-family: 'Roboto', sans-serif;
+          line-height: 1em;
           &.state-medical {
             font-weight: 600;
             color: #00b894;

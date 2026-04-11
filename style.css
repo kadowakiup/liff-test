@@ -102,10 +102,11 @@ body #calendarView #calendar .day .date {
 body #calendarView #calendar .day .shift-time {
   white-space: nowrap; /* 改行させない */
   overflow: hidden; /* はみ出た分を隠す */
-  padding: 2px;
+  padding: 3px;
   border-radius: 3px;
   background-color: #ededed;
   font-family: "Roboto", sans-serif;
+  line-height: 1em;
 }
 body #calendarView #calendar .day .shift-time.state-medical {
   font-weight: 600;
