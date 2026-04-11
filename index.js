@@ -545,7 +545,8 @@ window.onload = async function () {
       // ★ 期限切れなら一度だけ自動再ログイン
       if (data.message && (data.message.includes("セッション切れ") || data.message.includes("expired") || data.message.includes("認証エラー"))) {
         alert("セキュリティセッションの期限が切れました。再ログインします。");
-        liff.login();
+        // ここ
+        // liff.login();
         return;
       }
       throw new Error(data.message || "シフト取得に失敗しました");
