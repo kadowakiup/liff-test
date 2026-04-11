@@ -106,4 +106,24 @@ body #calendarView #monthNav #currentMonth {
 body #calendarView #monthNav #prevMonth, body #calendarView #monthNav #nextMonth {
   background-color: #fff;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body #calendarView #monthNav #prevMonth > img, body #calendarView #monthNav #nextMonth > img {
+  width: 18px;
+  height: 18px;
+  -o-object-fit: contain;
+     object-fit: contain;
+  -o-object-position: center;
+     object-position: center;
+}
+body #calendarView #monthNav #prevMonth > .arrow, body #calendarView #monthNav #nextMonth > .arrow {
+  width: 18px;
+  height: 18px;
+  -o-object-fit: contain;
+     object-fit: contain;
+  -o-object-position: center;
+     object-position: center;
+  fill: #616161;
 }/*# sourceMappingURL=style.css.map */
