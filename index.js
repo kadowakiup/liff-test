@@ -529,12 +529,7 @@ window.onload = async function () {
 
   async function reloadShifts() {
     const profile = await liff.getProfile();
-    const idToken = liff.getIDToken();
-    // ここ！
-    if (!idToken) {
-      console.warn("ID Token not found. Skipping fetch.");
-      return; // トークンがないなら一旦何もしない
-    }
+    const idToken = liff.getIDToken(); // ★ トークン取得
 
     const url =
       GAS_URL +
@@ -1232,19 +1227,18 @@ window.onload = async function () {
     // resultDiv.style.color = "black";
 
     // ここ！
-    // if (!liff.isLoggedIn()) {
-    //   resultDiv.innerHTML = "LINEログインへ移動します…";
-    //   liff.login({
-    //     redirectUri: window.location.href
-    //   });
-    //   return;
-    // }
+    if (liff.isLoggedIn()) {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('code')) {
+        // codeが含まれている場合、パラメータを除去したURLに置き換える（リロードはしない）
+        window.history.replaceState(null, null, window.location.pathname);
+      }
+    }
 
     if (!liff.isLoggedIn()) {
       resultDiv.innerHTML = "LINEログインへ移動します…";
       liff.login({
-        // window.location.href ではなく、パラメータを除いたURLを指定
-        redirectUri: window.location.origin + window.location.pathname 
+        redirectUri: window.location.href
       });
       return;
     }
