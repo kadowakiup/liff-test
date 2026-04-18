@@ -44,6 +44,7 @@ window.onload = async function () {
   let currentDate = new Date();
 
   let fetchedName = "";
+  let nationalHolidays = {}; // ★追加：祝日データを保存する変数
 
   // 選択中シフト情報
   let selectedShiftId = "";
@@ -239,6 +240,17 @@ window.onload = async function () {
       btn.style.pointerEvents = disabled ? "none" : "auto";
       btn.style.opacity = disabled ? "0.5" : "1";
     });
+  }
+
+  // === ★追加：日本の祝日データを取得する関数 ===
+  async function loadHolidays() {
+    try {
+      // 誰でも使える無料の祝日データAPIを利用
+      const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
+      nationalHolidays = await res.json();
+    } catch (err) {
+      console.error("祝日データの取得に失敗しました", err);
+    }
   }
 
   function fileToBase64(fileOrBlob) {
@@ -1262,6 +1274,7 @@ try {
     resultDiv.textContent = "更新中...";
     resultDiv.classList.add("kousintyu");
     
+    await loadHolidays(); // ★追加：シフトを取得する前に祝日データを読み込む
     await reloadShifts();
     
     // 5. データ取得成功後にURLを綺麗にする（オプション）
@@ -1334,14 +1347,18 @@ try {
       dateSpan.className = "date";
       dateSpan.textContent = day;
 
-      // === ★ここから追加：曜日に合わせて日付の色を変更 ===
+      // === ★修正：祝日と土日の色を変更 ===
       const dayOfWeek = new Date(year, month, day).getDay();
-      if (dayOfWeek === 0) {
+      
+      // nationalHolidaysの中に、この日付(YYYY-MM-DD)が含まれているかチェック
+      if (nationalHolidays[fullDateStr]) {
+        dateSpan.style.color = "#ff4d8d"; // 祝日（赤）
+      } else if (dayOfWeek === 0) {
         dateSpan.style.color = "#ff4d8d"; // 日曜日（赤）
       } else if (dayOfWeek === 6) {
         dateSpan.style.color = "#01b6ff"; // 土曜日（青）
       }
-      // === ★ここまで追加 ===
+      // === ★ここまで ===
 
       dayDiv.appendChild(dateSpan);
 
